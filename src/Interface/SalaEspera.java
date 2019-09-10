@@ -35,13 +35,13 @@ public class SalaEspera extends javax.swing.JFrame {
         jLabel1.setText("Esperando por outro Jogador se conectar...");
 
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel2.setText("O IP da sua máquina/sala é o:");
+        jLabel2.setText("O seu Apelido no jogo é:");
 
         jLabel3.setBackground(new java.awt.Color(133, 133, 133));
         jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel3.setBorder(new javax.swing.border.SoftBevelBorder(0));
 
-        jButton1.setText("Voltar");
+        jButton1.setText("Cancelar Busca");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
@@ -53,7 +53,7 @@ public class SalaEspera extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(60, Short.MAX_VALUE)
+                .addContainerGap(86, Short.MAX_VALUE)
                 .addComponent(jLabel2)
                 .addGap(29, 29, 29)
                 .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE)
