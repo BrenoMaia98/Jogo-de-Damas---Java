@@ -7,6 +7,7 @@ package jogo;
 
 import Conexao.Cliente;
 import Conexao.Servidor;
+import Interface.TelaInicial;
 import java.io.IOException;
 import javax.swing.JOptionPane;
 
@@ -21,19 +22,7 @@ public class main {
      */
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
-        String opcao = JOptionPane.showInputDialog("Iniciar partida ou entrar em uma existente?"), nome, resposta;
-        if(opcao.equals("iniciar")){
-            Servidor servidor = new Servidor();
-        }
-        else{
-            nome = JOptionPane.showInputDialog("Qual será seu nome no jogo?");
-            Cliente jogador = new Cliente();
-            jogador.conectarServidor();
-            resposta = jogador.mandarMensagem("Nome:"+nome);
-            System.out.println(resposta);
-            jogador.mandarMensagem("Sair");
-        }
-        
+        new TelaInicial().setVisible(true);
     }
     
 }

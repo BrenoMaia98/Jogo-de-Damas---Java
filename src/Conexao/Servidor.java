@@ -5,6 +5,7 @@
  */
 package Conexao;
 
+import Interface.Tabuleiro;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -19,7 +20,7 @@ import javax.swing.JOptionPane;
  *
  * @author anach
  */
-public final class Servidor extends Thread{
+public final class Servidor{
     private ServerSocket servidor;
     private Jogador jogador1;
     private Jogador jogador2;
@@ -27,23 +28,23 @@ public final class Servidor extends Thread{
     private BufferedReader in;
     private PrintWriter out;
 
-    public Servidor() throws IOException {
-        String nome1 = JOptionPane.showInputDialog("Qual será seu nome no jogo?");
-        jogador1 = new Jogador(nome1,'b');
+    public Servidor(String nome) throws IOException {
+        jogador1 = new Jogador(nome,'b');
         iniciar();
     }
     
     public void iniciar() throws IOException{
         servidor = new ServerSocket(12000);
         System.out.println("Aguardando outro jogador...");
-        conectar();
+        
     }
     
     public void conectar() throws IOException{
        cliente = servidor.accept();
        out = new PrintWriter(cliente.getOutputStream(), true);
        in = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
-       this.start();
+       new Tabuleiro();
+       this.executar();
     }
     
     public void setarDadosAdversario(String nome){
@@ -51,8 +52,8 @@ public final class Servidor extends Thread{
         System.out.println("Partida iniciada!");
     }
     
-    @Override
-    public void run(){
+    
+    public void executar(){
         boolean saiu = false;
         String mensagem;
         try {
