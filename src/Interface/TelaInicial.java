@@ -140,9 +140,8 @@ public class TelaInicial extends javax.swing.JFrame {
         if(!" ".equals(nome) || !"".equals(nome)){
             Cliente jogador = new Cliente();
             jogador.conectarServidor();
-            String resposta = jogador.mandarMensagem("Nome:"+nome);
-            System.out.println(resposta);
-             new Tabuleiro();
+            jogador.start();
+            
             //jogador.mandarMensagem("Sair");   
         }
     }//GEN-LAST:event_BuscarPartidaActionPerformed
@@ -155,10 +154,12 @@ public class TelaInicial extends javax.swing.JFrame {
             Servidor servidor;
             try {
                 servidor = new Servidor(nome);
-                servidor.conectar();
+                servidor.start();
+                    
+                
             } catch (IOException ex) {
                 Logger.getLogger(TelaInicial.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            } 
             
         }
        
