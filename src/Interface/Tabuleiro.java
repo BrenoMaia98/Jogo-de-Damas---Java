@@ -172,12 +172,12 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
                     g.setColor(Color.darkGray.darker());
                     g.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
                 }
-                
-                    if (availablePlays[col][row] == 1) {
-                        if (puloObrigatorio && tipoMovimento[colAt][linAt] == JUMP) {
+
+                if (availablePlays[col][row] == 1) {
+                    if (puloObrigatorio && tipoMovimento[colAt][linAt] == JUMP) {
                         if (col <= (colAt + 1) && col >= (colAt - 1)) { // esta em +1 ou -1 de coluna
                             if (row <= (linAt + 1) && row >= (linAt - 1)) { // esta em +1 ou -1 de coluna
-                                    availablePlays[col][row] = 0;
+                                availablePlays[col][row] = 0;
                             } else {
                                 g.setColor(Color.CYAN.darker());
                                 g.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
@@ -186,13 +186,12 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
                             g.setColor(Color.CYAN.darker());
                             g.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
                         }
-                    }
-                else{
+                    } else {
                         g.setColor(Color.CYAN.darker());
                         g.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
-                  
-                }
+
                     }
+                }
                 if (gameData[col][row] == WHITE) {
                     drawPiece(col, row, g, Color.white);
                 } else if (gameData[col][row] == WHITE_KING) {
@@ -235,8 +234,8 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
 
     public void criaVetorPulo() {
         posicoesPulo.clear();
-        for (int row2 = 0; row2 < 7; row2++) {
-            for (int col2 = 0; col2 < 7; col2++) {
+        for (int row2 = 0; row2 < 8; row2++) {
+            for (int col2 = 0; col2 < 8; col2++) {
                 if (tipoMovimento[col2][row2] == JUMP) {
                     int[] aux = {col2, row2};
                     posicoesPulo.add(aux);
@@ -256,8 +255,8 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
     }
 
     public void verificaMovimentoPecas() {
-        for (int row = 0; row < 7; row++) {
-            for (int col = 0; col < 7; col++) {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
                 if ((checkTeamPiece(col, row) == true)) { //checks if the piece is assigned to the current player
                     if (corPlayer1 == RED) {
                         if (gameData[col][row] == RED) {  // only goes north, checks the row above it's own
@@ -281,8 +280,8 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
                         getDown(col, row); // GET UP GET UP AND GET DOWN
                     }
                 }
-                for (int row2 = 0; row2 < 7; row2++) {
-                    for (int col2 = 0; col2 < 7; col2++) {
+                for (int row2 = 0; row2 < 8; row2++) {
+                    for (int col2 = 0; col2 < 8; col2++) {
                         if (availablePlays[col2][row2] == 1) {
                             if (col <= (col2 + 1) && col >= (col2 - 1)) { // esta em +1 ou -1 de coluna
                                 if (row <= (row2 + 1) && row >= (row2 - 1)) { // esta em +1 ou -1 de coluna
@@ -314,7 +313,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         int row = (evt.getY() - 30) / tileSize; // 30 is top frame length
         colAt = col;
         linAt = row;
-        if(puloObrigatorio && tipoMovimento[col][row] == JUMP || !puloObrigatorio){
+        if (puloObrigatorio && tipoMovimento[col][row] == JUMP || !puloObrigatorio) {
             if (inPlay == false && gameData[col][row] != 0 || inPlay == true && checkTeamPiece(col, row) == true) {
                 resetPlay();
                 storedCol = col;
@@ -326,7 +325,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
             } else if (inPlay == true && availablePlays[col][row] == 0) {
                 resetPlay();
             }
-        }else{
+        } else {
             if (inPlay == true && availablePlays[col][row] == 1) {
                 makeMove(col, row, storedCol, storedRow);
             } else if (inPlay == true && availablePlays[col][row] == 0) {
@@ -335,21 +334,22 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         }
     }
 
-    public void zerarTipoMovimento(){
+    public void zerarTipoMovimento() {
         for (int row = 0; row < numTilesPerRow; row++) {
             for (int col = 0; col < numTilesPerRow; col++) {
                 tipoMovimento[col][row] = EMPTY;
             }
         }
     }
-    public void zerarTipoAvailable(){
+
+    public void zerarTipoAvailable() {
         for (int row = 0; row < numTilesPerRow; row++) {
             for (int col = 0; col < numTilesPerRow; col++) {
                 availablePlays[col][row] = 0;
             }
         }
     }
-    
+
     public void swapPlayer() {
         if (currentPlayer == corPlayer1) {
             currentPlayer = EMPTY;
