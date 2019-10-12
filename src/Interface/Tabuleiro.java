@@ -80,11 +80,9 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
     }
 
     //funções controle de variaveis
-    
     public void resetPlay() {
         storedCol = 0;
         storedRow = 0;
-        inPlay = false;
         for (int row = 0; row < numTilesPerRow; row++) {
             for (int col = 0; col < numTilesPerRow; col++) {
                 availablePlays[col][row] = 0;
@@ -117,7 +115,8 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         if (puloObrigatorio && tipoMovimento[col][row] == JUMP || !puloObrigatorio) {
             if (inPlay == false && gameData[col][row] != 0 || inPlay == true && checkTeamPiece(col, row) == true) {
                 resetPlay();
-                isJump=false;
+                inPlay = false;
+                isJump = false;
                 storedCol = col;
                 storedRow = row; // Sets the current click to instance variables to be used elsewhere
 
@@ -126,14 +125,14 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
                 makeMove(col, row, storedCol, storedRow);
             } else if (inPlay == true && availablePlays[col][row] == 0) {
                 resetPlay();
-                isJump=false;
+                isJump = false;
             }
         } else {
             if (inPlay == true && availablePlays[col][row] == 1) {
                 makeMove(col, row, storedCol, storedRow);
             } else if (inPlay == true && availablePlays[col][row] == 0) {
                 resetPlay();
-                isJump=false;
+                isJump = false;
             }
         }
     }
@@ -159,22 +158,31 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         if (abs((storedRow - row)) > 1) {
             removePiece(col, row, storedCol, storedRow);
         }
-        
+
         if (cliente == null) {
             servidor.mandarMovimento(col, row, storedCol, storedRow);
         } else {
             cliente.mandarMovimento(col, row, storedCol, storedRow);
         }
         resetPlay();
-        if(currentPlayer == corPlayer1){
-            if(isJump){
-                zerarTipoMovimento();
+        if (currentPlayer == corPlayer1) {
+            if (puloObrigatorio) {
                 verificaMovimentoPecas();
-                if(!isJump)this.swapPlayer();
-            }else
+
+                if (!puloObrigatorio) {
+                    this.swapPlayer();
+                    if (cliente == null) {
+                        servidor.mandarMsg("NaoTenhoJogadas");
+                    } else {
+                        cliente.mandarMsg("NaoTenhoJogadas");
+                    }
+
+                }
+            } else {
                 this.swapPlayer();
+            }
         }
-        
+
     }
 
     public void getAvailablePlays(int col, int row) {
@@ -218,6 +226,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
     }
 
     public void verificaMovimentoPecas() {
+        zerarTipoMovimento();
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 if ((checkTeamPiece(col, row) == true)) { //checks if the piece is assigned to the current player
@@ -293,16 +302,13 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         gameData[pieceCol][pieceRow] = EMPTY;
     }//TODO REWRITE
 
-    
     //Regras do jogo
-    
     public void swapPlayer() {
         if (currentPlayer == corPlayer1) {
             currentPlayer = EMPTY;
         } else {
             currentPlayer = corPlayer1;
-                zerarTipoMovimento();
-                verificaMovimentoPecas();
+            verificaMovimentoPecas();
         }
 
     }
@@ -466,7 +472,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         }
     }
 
-     public boolean canJump(int col, int row, int opponentCol, int opponentRow) {
+    public boolean canJump(int col, int row, int opponentCol, int opponentRow) {
         //Steps for checking if canJump is true: determine piece within movement. Then check if its an opponent piece, then if the space behind it is empty
         //and in bounds
         // 4 conditions based on column and row relations to the other piece
@@ -490,7 +496,6 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         return false;
     }
 
-    
     public boolean checkTeamPiece(int col, int row) {
         if (currentPlayer == RED && (gameData[col][row] == RED || gameData[col][row] == RED_KING)) //bottom
         {
@@ -513,6 +518,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
     }
 
     public int[] getJumpPos(int col, int row, int opponentCol, int opponentRow) {
+
         if (col > opponentCol && row > opponentRow && gameData[col - 2][row - 2] == 0) {
             return new int[]{col - 2, row - 2};
         } else if (col > opponentCol && row < opponentRow && gameData[col - 2][row + 2] == 0) {
@@ -520,12 +526,15 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         } else if (col < opponentCol && row > opponentRow && gameData[col + 2][row - 2] == 0) {
             return new int[]{col + 2, row - 2};
         } else {
-            return new int[]{col + 2, row + 2};
+            if (corPlayer1 == WHITE) {
+                return new int[]{col - 2, row - 2};
+            } else {
+                return new int[]{col + 2, row + 2};
+            }
         }
     }
 
     //metodos de interface grafica
-    
     public void window(int width, int height, Tabuleiro game) { //draw the frame and add exit functionality
         JFrame frame = new JFrame();
         frame.setSize(width, height);
@@ -641,8 +650,6 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         g.drawString(msg, (width - metr.stringWidth(msg)) / 2, width / 2);
     }
 
-    
-    
     // Methods that must be included for some reason? WHY
     public void mouseClicked(MouseEvent e) {
     }

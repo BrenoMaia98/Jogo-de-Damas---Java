@@ -79,7 +79,7 @@ public final class Servidor extends Thread {
                         linhaAnterior = Integer.parseInt(array[4]);
                         t.atualizarPosicao(colAtual, linhaAtual,colAnterior,linhaAnterior);
                         if(array.length != 6){
-                            t.swapPlayer();
+                            t.swapPlayer(); // verique se o outro tem pulo encadeado
                         }
                         break;
                     case "Sair":
@@ -87,6 +87,9 @@ public final class Servidor extends Thread {
                         out.println("Obrigado por jogar!");
                         saiu = true;
                         fecharConexao();
+                        break;
+                    case "NaoTenhoJogadas":
+                        t.swapPlayer();
                         break;
                     default:
                         break;
@@ -110,6 +113,10 @@ public final class Servidor extends Thread {
         String movimento = "Movimento:" + a + ":" + b + ":" + c + ":" + d;
         if(t.isJump) movimento +=":++"; // caso tenha um próximo pulo deve avisar o adversário
         out.println(movimento);
+    }
+    
+    public void mandarMsg(String text){
+        out.println(text);
     }
     
     public void fecharConexao() throws IOException {

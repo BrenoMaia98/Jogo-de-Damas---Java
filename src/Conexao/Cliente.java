@@ -68,12 +68,15 @@ public class Cliente extends Thread{
                         linhaAnterior = Integer.parseInt(array[4]);
                         t.atualizarPosicao(colAtual, linhaAtual,colAnterior,linhaAnterior);
                         if(array.length != 6){
-                            t.swapPlayer();
+                            t.swapPlayer();// verique se o outro tem pulo encadeado
                         }
                         break;
                     case "Sair":
                         out.println("Obrigado por jogar!");
                         saiu = true;
+                        break;
+                    case "NaoTenhoJogadas":
+                        t.swapPlayer();
                         break;
                     default:
                         break;
@@ -99,6 +102,10 @@ public class Cliente extends Thread{
         out.println(movimento);
     }
 
+    public void mandarMsg(String text){
+        out.println(text);
+    }
+    
     public void encerrarConexao() throws IOException {
         in.close();
         out.close();
