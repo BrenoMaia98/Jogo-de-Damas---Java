@@ -29,10 +29,8 @@ public final class Servidor extends Thread {
     private BufferedReader in;
     private PrintWriter out;
     private Tabuleiro t;
-    private boolean bloqueado;
     public Servidor(String nome) throws IOException {
         jogador1 = new Jogador(nome, 'b');
-        bloqueado = false;
     }
 
     @Override
@@ -59,13 +57,6 @@ public final class Servidor extends Thread {
         this.executar();
     }
 
-    public boolean isBloqueado() {
-        return bloqueado;
-    }
-
-    public void setBloqueado(boolean bloqueado) {
-        this.bloqueado = bloqueado;
-    }
 
     public void setarDadosAdversario(String nome) {
         jogador2 = new Jogador(nome, 'p');
@@ -87,8 +78,9 @@ public final class Servidor extends Thread {
                         colAnterior = Integer.parseInt(array[3]);
                         linhaAnterior = Integer.parseInt(array[4]);
                         t.atualizarPosicao(colAtual, linhaAtual,colAnterior,linhaAnterior);
-                        t.swapPlayer();
-                        bloqueado = false;
+                        if(array.length != 6){
+                            t.swapPlayer();
+                        }
                         break;
                     case "Sair":
                         System.out.println("Jogador " + jogador2.getNome() + " saiu da partida!");
@@ -116,6 +108,7 @@ public final class Servidor extends Thread {
         c = 7 - colAnterior;
         d = 7 - linhaAnterior;
         String movimento = "Movimento:" + a + ":" + b + ":" + c + ":" + d;
+        if(t.isJump) movimento +=":++"; // caso tenha um próximo pulo deve avisar o adversário
         out.println(movimento);
     }
     

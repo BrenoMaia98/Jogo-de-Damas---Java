@@ -24,18 +24,9 @@ public class Cliente extends Thread{
     private BufferedReader in;
     private PrintWriter out;
     private Tabuleiro t;
-    private boolean bloqueado;
     public Cliente() {
-        bloqueado = true;
     }
 
-    public boolean isBloqueado() {
-        return bloqueado;
-    }
-
-    public void setBloqueado(boolean bloqueado) {
-        this.bloqueado = bloqueado;
-    }
 
     public void conectarServidor() {
         try {
@@ -76,8 +67,9 @@ public class Cliente extends Thread{
                         colAnterior = Integer.parseInt(array[3]);
                         linhaAnterior = Integer.parseInt(array[4]);
                         t.atualizarPosicao(colAtual, linhaAtual,colAnterior,linhaAnterior);
-                        t.swapPlayer();
-                        bloqueado = false;
+                        if(array.length != 6){
+                            t.swapPlayer();
+                        }
                         break;
                     case "Sair":
                         out.println("Obrigado por jogar!");
@@ -97,7 +89,13 @@ public class Cliente extends Thread{
     }
 
     public void mandarMovimento(int colAtual, int linhaAtual, int colAnterior, int linhaAnterior) {
-        String movimento = "Movimento:" + (7-colAtual) + ":" + (7-linhaAtual) + ":" + (7-colAnterior) + ":" + (7-linhaAnterior);
+        int a,b,c,d;
+        a = 7 - colAtual;
+        b = 7 - linhaAtual;
+        c = 7 - colAnterior;
+        d = 7 - linhaAnterior;
+        String movimento = "Movimento:" + a + ":" + b + ":" + c + ":" + d;
+        if(t.isJump) movimento +=":++"; // caso tenha um próximo pulo deve avisar o adversário
         out.println(movimento);
     }
 

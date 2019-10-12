@@ -79,6 +79,310 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         this.posicoesPulo = new ArrayList();
     }
 
+    //funções controle de variaveis
+    
+    public void resetPlay() {
+        storedCol = 0;
+        storedRow = 0;
+        inPlay = false;
+        for (int row = 0; row < numTilesPerRow; row++) {
+            for (int col = 0; col < numTilesPerRow; col++) {
+                availablePlays[col][row] = 0;
+            }
+        }
+        repaint();
+    }
+
+    public void zerarTipoMovimento() {
+        for (int row = 0; row < numTilesPerRow; row++) {
+            for (int col = 0; col < numTilesPerRow; col++) {
+                tipoMovimento[col][row] = EMPTY;
+            }
+        }
+    }
+
+    public void zerarTipoAvailable() {
+        for (int row = 0; row < numTilesPerRow; row++) {
+            for (int col = 0; col < numTilesPerRow; col++) {
+                availablePlays[col][row] = 0;
+            }
+        }
+    }
+
+    public void mousePressed(java.awt.event.MouseEvent evt) {
+        int col = (evt.getX() - 8) / tileSize; // 8 is left frame length
+        int row = (evt.getY() - 30) / tileSize; // 30 is top frame length
+        colAt = col;
+        linAt = row;
+        if (puloObrigatorio && tipoMovimento[col][row] == JUMP || !puloObrigatorio) {
+            if (inPlay == false && gameData[col][row] != 0 || inPlay == true && checkTeamPiece(col, row) == true) {
+                resetPlay();
+                isJump=false;
+                storedCol = col;
+                storedRow = row; // Sets the current click to instance variables to be used elsewhere
+
+                getAvailablePlays(col, row);
+            } else if (inPlay == true && availablePlays[col][row] == 1) {
+                makeMove(col, row, storedCol, storedRow);
+            } else if (inPlay == true && availablePlays[col][row] == 0) {
+                resetPlay();
+                isJump=false;
+            }
+        } else {
+            if (inPlay == true && availablePlays[col][row] == 1) {
+                makeMove(col, row, storedCol, storedRow);
+            } else if (inPlay == true && availablePlays[col][row] == 0) {
+                resetPlay();
+                isJump=false;
+            }
+        }
+    }
+
+    //operações de movimento
+    public void atualizarPosicao(int col, int row, int storedCol, int storedRow) {
+        int x = gameData[storedCol][storedRow]; //change the piece to new tile
+        gameData[col][row] = x;
+        gameData[storedCol][storedRow] = EMPTY; //change old piece location to EMPTY
+        checkKing(col, row);
+
+        if (abs((storedRow - row)) > 1) {
+            removePiece(col, row, storedCol, storedRow);
+        }
+        resetPlay();
+    }
+
+    public void makeMove(int col, int row, int storedCol, int storedRow) {
+        int x = gameData[storedCol][storedRow]; //change the piece to new tile
+        gameData[col][row] = x;
+        gameData[storedCol][storedRow] = EMPTY; //change old piece location to EMPTY
+        checkKing(col, row);
+        if (abs((storedRow - row)) > 1) {
+            removePiece(col, row, storedCol, storedRow);
+        }
+        
+        if (cliente == null) {
+            servidor.mandarMovimento(col, row, storedCol, storedRow);
+        } else {
+            cliente.mandarMovimento(col, row, storedCol, storedRow);
+        }
+        resetPlay();
+        if(currentPlayer == corPlayer1){
+            if(isJump){
+                zerarTipoMovimento();
+                verificaMovimentoPecas();
+                if(!isJump)this.swapPlayer();
+            }else
+                this.swapPlayer();
+        }
+        
+    }
+
+    public void getAvailablePlays(int col, int row) {
+        inPlay = true;
+        if ((checkTeamPiece(col, row) == true)) { //checks if the piece is assigned to the current player
+            if (corPlayer1 == RED) {
+                if (gameData[col][row] == RED) {  // only goes north, checks the row above it's own
+                    getUp(col, row);
+                }
+                if (gameData[col][row] == WHITE) { // only goes south, checks the row below it's own
+                    getDown(col, row);
+                }
+            } else {
+                if (gameData[col][row] == WHITE) {  // only goes north, checks the row above it's own
+                    getUp(col, row);
+                }
+                if (gameData[col][row] == RED) { // only goes south, checks the row below it's own
+                    getDown(col, row);
+                }
+            }
+
+            if (gameData[col][row] == RED_KING || gameData[col][row] == WHITE_KING) { // Goes up OR down 1 row below it's own
+                getUp(col, row);
+                //getUp(col, row);
+                getDown(col, row); // GET UP GET UP AND GET DOWN
+            }
+            repaint();
+        }
+    }
+
+    public void criaVetorPulo() {
+        posicoesPulo.clear();
+        for (int row2 = 0; row2 < 8; row2++) {
+            for (int col2 = 0; col2 < 8; col2++) {
+                if (tipoMovimento[col2][row2] == JUMP) {
+                    int[] aux = {col2, row2};
+                    posicoesPulo.add(aux);
+                }
+            }
+        }
+    }
+
+    public void verificaMovimentoPecas() {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                if ((checkTeamPiece(col, row) == true)) { //checks if the piece is assigned to the current player
+                    if (corPlayer1 == RED) {
+                        if (gameData[col][row] == RED) {  // only goes north, checks the row above it's own
+                            getUp(col, row);
+                        }
+                        if (gameData[col][row] == WHITE) { // only goes south, checks the row below it's own
+                            getDown(col, row);
+                        }
+                    } else {
+                        if (gameData[col][row] == WHITE) {  // only goes north, checks the row above it's own
+                            getUp(col, row);
+                        }
+                        if (gameData[col][row] == RED) { // only goes south, checks the row below it's own
+                            getDown(col, row);
+                        }
+                    }
+
+                    if (gameData[col][row] == RED_KING || gameData[col][row] == WHITE_KING) { // Goes up OR down 1 row below it's own
+                        getUp(col, row);
+                        //getUp(col, row);
+                        getDown(col, row); // GET UP GET UP AND GET DOWN
+                    }
+                }
+                for (int row2 = 0; row2 < 8; row2++) {
+                    for (int col2 = 0; col2 < 8; col2++) {
+                        if (availablePlays[col2][row2] == 1) {
+                            if (col <= (col2 + 1) && col >= (col2 - 1)) { // esta em +1 ou -1 de coluna
+                                if (row <= (row2 + 1) && row >= (row2 - 1)) { // esta em +1 ou -1 de coluna
+                                    if (tipoMovimento[col][row] != JUMP) {
+                                        tipoMovimento[col][row] = WALK;
+                                    }
+                                } else {
+                                    tipoMovimento[col][row] = JUMP;
+                                }
+                            } else {
+                                tipoMovimento[col][row] = JUMP;
+                            }
+                        }
+                    }
+                }
+                zerarTipoAvailable();
+            }
+        }
+        criaVetorPulo();
+        if (posicoesPulo.size() > 0) {
+            puloObrigatorio = true;
+        } else {
+            puloObrigatorio = false;
+        }
+    }
+
+    public void removePiece(int col, int row, int storedCol, int storedRow) { //might be a better way to do this, but detects position of opponent piece based on destination and original position
+        int pieceRow = -1;
+        int pieceCol = -1;
+        if (col > storedCol && row > storedRow) {
+            pieceRow = row - 1;
+            pieceCol = col - 1;
+        }
+        if (col > storedCol && row < storedRow) {
+            pieceRow = row + 1;
+            pieceCol = col - 1;
+        }
+        if (col < storedCol && row > storedRow) {
+            pieceRow = row - 1;
+            pieceCol = col + 1;
+        }
+        if (col < storedCol && row < storedRow) {
+            pieceRow = row + 1;
+            pieceCol = col + 1;
+        }
+        gameData[pieceCol][pieceRow] = EMPTY;
+    }//TODO REWRITE
+
+    
+    //Regras do jogo
+    
+    public void swapPlayer() {
+        if (currentPlayer == corPlayer1) {
+            currentPlayer = EMPTY;
+        } else {
+            currentPlayer = corPlayer1;
+                zerarTipoMovimento();
+                verificaMovimentoPecas();
+        }
+
+    }
+
+    public void getUp(int col, int row) { // Get Up availability
+        int rowUp = row - 1;
+        if (col == 0 && row != 0) { //X=0, Y is not 0
+            for (int i = col; i < col + 2; i++) { //check to right
+                if (gameData[col][row] != 0 && gameData[i][rowUp] != 0) {
+                    if (canJump(col, row, i, rowUp) == true) {
+                        int jumpCol = getJumpPos(col, row, i, rowUp)[0];
+                        int jumpRow = getJumpPos(col, row, i, rowUp)[1];
+                        availablePlays[jumpCol][jumpRow] = 1;
+                    }
+                } else if (baseGameData[i][rowUp] == 1 && gameData[i][rowUp] == 0) {
+                    availablePlays[i][rowUp] = 1;
+                }
+            }
+        } else if (col == (numTilesPerRow - 1) && row != 0) { //X=max, Y is not 0
+            if (gameData[col][row] != 0 && gameData[col - 1][rowUp] != 0) {
+                if (canJump(col, row, col - 1, rowUp) == true) {
+                    int jumpCol = getJumpPos(col, row, col - 1, rowUp)[0];
+                    int jumpRow = getJumpPos(col, row, col - 1, rowUp)[1];
+                    availablePlays[jumpCol][jumpRow] = 1;
+                }
+            } else if (baseGameData[col - 1][rowUp] == 1 && gameData[col - 1][rowUp] == 0) {
+                availablePlays[col - 1][rowUp] = 1;
+            }
+        } else if (col != numTilesPerRow - 1 && col != 0 && row != 0) {
+            for (int i = col - 1; i <= col + 1; i++) {
+                if (gameData[col][row] != 0 && gameData[i][rowUp] != 0) {
+                    if (canJump(col, row, i, rowUp) == true) {
+                        int jumpCol = getJumpPos(col, row, i, rowUp)[0];
+                        int jumpRow = getJumpPos(col, row, i, rowUp)[1];
+                        availablePlays[jumpCol][jumpRow] = 1;
+                    }
+                } else if (baseGameData[i][rowUp] == 1 && gameData[i][rowUp] == 0) {
+                    availablePlays[i][rowUp] = 1;
+                }
+            }
+        }
+    }
+
+    public void getDown(int col, int row) {
+        int rowDown = row + 1;
+        if (col == 0 && row != numTilesPerRow - 1) {
+            if (gameData[col][row] != 0 && gameData[col + 1][rowDown] != 0) {
+                if (canJump(col, row, col + 1, rowDown) == true) {
+                    int jumpCol = getJumpPos(col, row, col + 1, rowDown)[0];
+                    int jumpRow = getJumpPos(col, row, col + 1, rowDown)[1];
+                    availablePlays[jumpCol][jumpRow] = 1;
+                }
+            } else if (baseGameData[col + 1][rowDown] == 1 && gameData[col + 1][rowDown] == 0) {
+                availablePlays[col + 1][rowDown] = 1;
+            }
+        } else if (col == numTilesPerRow - 1 && row != numTilesPerRow - 1) {
+            if (gameData[col][row] != 0 && gameData[col - 1][rowDown] != 0) {
+                if (canJump(col, row, col - 1, rowDown) == true) {
+                    int jumpCol = getJumpPos(col, row, col - 1, rowDown)[0];
+                    int jumpRow = getJumpPos(col, row, col - 1, rowDown)[1];
+                    availablePlays[jumpCol][jumpRow] = 1;
+                }
+            } else if (baseGameData[col - 1][rowDown] == 1 && gameData[col - 1][rowDown] == 0) {
+                availablePlays[col - 1][rowDown] = 1;
+            }
+        } else if (col != numTilesPerRow - 1 && col != 0 && row != numTilesPerRow - 1) {
+            for (int i = col - 1; i <= col + 1; i++) {
+                if (gameData[col][row] != 0 && gameData[i][rowDown] != 0) {
+                    if (canJump(col, row, i, rowDown) == true) {
+                        int jumpCol = getJumpPos(col, row, i, rowDown)[0];
+                        int jumpRow = getJumpPos(col, row, i, rowDown)[1];
+                        availablePlays[jumpCol][jumpRow] = 1;
+                    }
+                } else if (baseGameData[i][rowDown] == 1 && gameData[i][rowDown] == 0) {
+                    availablePlays[i][rowDown] = 1;
+                }
+            }
+        }
+    }
+
     public boolean gameOver() { //Wrapper for gameOverInternal
         return gameOverInternal(0, 0, 0, 0);
     }
@@ -104,6 +408,124 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         return gameOverInternal(col + 1, row, red, white);
     }
 
+    //funções de checagem
+    public boolean podePular(int col, int row) {
+        for (int i = 0; i < posicoesPulo.size(); i++) {
+            int[] res = (int[]) posicoesPulo.get(i);
+            if (res[0] == col && res[1] == row) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isKing(int col, int row) {
+        if (gameData[col][row] == RED_KING || gameData[col][row] == WHITE_KING) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public int checkOpponent(int col, int row) {
+        if (gameData[col][row] == RED || gameData[col][row] == RED_KING) {
+            return WHITE;
+        } else {
+            return RED;
+        }
+    }
+
+    public void checkExtraJumps(int col, int row) {
+        int opponent = checkOpponent(col, row);
+        int opponentKing = checkOpponent(col, row) + 1;
+        if (gameData[col - 1][row - 1] == opponent || gameData[col - 1][row - 1] == opponentKing) {
+            availablePlays[col - 1][row - 1] = 1;
+        } else if (gameData[col + 1][row - 1] == opponent || gameData[col + 1][row - 1] == opponentKing) {
+            availablePlays[col + 1][row - 1] = 1;
+        } else if (gameData[col - 1][row + 1] == opponent || gameData[col - 1][row + 1] == opponentKing) {
+            availablePlays[col - 1][row + 1] = 1;
+        } else if (gameData[col + 1][row + 1] == opponent || gameData[col + 1][row + 1] == opponentKing) {
+            availablePlays[col + 1][row + 1] = 1;
+        }
+        repaint();
+    }
+
+    public void checkKing(int col, int row) {
+        if (gameData[col][row] == RED && row == 0 && servidor != null) {
+            gameData[col][row] = RED_KING;
+        } else if (gameData[col][row] == WHITE && row == numTilesPerRow - 1 && servidor != null) {
+            gameData[col][row] = WHITE_KING;
+        } else {
+            if (gameData[col][row] == RED && row == numTilesPerRow - 1 && cliente != null) {
+                gameData[col][row] = RED_KING;
+            } else if (gameData[col][row] == WHITE && row == 0 && cliente != null) {
+                gameData[col][row] = WHITE_KING;
+            } else {
+                return;
+            }
+        }
+    }
+
+     public boolean canJump(int col, int row, int opponentCol, int opponentRow) {
+        //Steps for checking if canJump is true: determine piece within movement. Then check if its an opponent piece, then if the space behind it is empty
+        //and in bounds
+        // 4 conditions based on column and row relations to the other piece
+        if (((gameData[col][row] == WHITE || gameData[col][row] == WHITE_KING) && (gameData[opponentCol][opponentRow] == RED || gameData[opponentCol][opponentRow] == RED_KING)) || (gameData[col][row] == RED || gameData[col][row] == RED_KING) && (gameData[opponentCol][opponentRow] == WHITE || gameData[opponentCol][opponentRow] == WHITE_KING)) {
+            //If the piece is white/red and opponent piece is opposite TODO fix this if. It's so ugly
+            if (opponentCol == 0 || opponentCol == numTilesPerRow - 1 || opponentRow == 0 || opponentRow == numTilesPerRow - 1) {
+                isJump = false;
+                return false;
+            }
+            int[] toData = getJumpPos(col, row, opponentCol, opponentRow);
+            if (isLegalPos(toData[0], toData[1]) == false) //check board outofbounds
+            {
+                isJump = false;
+                return false;
+            }
+            if (gameData[toData[0]][toData[1]] == 0) {
+                isJump = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
+    public boolean checkTeamPiece(int col, int row) {
+        if (currentPlayer == RED && (gameData[col][row] == RED || gameData[col][row] == RED_KING)) //bottom
+        {
+            return true;
+        }
+        if (currentPlayer == WHITE && (gameData[col][row] == WHITE || gameData[col][row] == WHITE_KING)) //top
+        {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isLegalPos(int col, int row) {
+        if (row < 0 || row >= numTilesPerRow || col < 0 || col >= numTilesPerRow) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public int[] getJumpPos(int col, int row, int opponentCol, int opponentRow) {
+        if (col > opponentCol && row > opponentRow && gameData[col - 2][row - 2] == 0) {
+            return new int[]{col - 2, row - 2};
+        } else if (col > opponentCol && row < opponentRow && gameData[col - 2][row + 2] == 0) {
+            return new int[]{col - 2, row + 2};
+        } else if (col < opponentCol && row > opponentRow && gameData[col + 2][row - 2] == 0) {
+            return new int[]{col + 2, row - 2};
+        } else {
+            return new int[]{col + 2, row + 2};
+        }
+    }
+
+    //metodos de interface grafica
+    
     public void window(int width, int height, Tabuleiro game) { //draw the frame and add exit functionality
         JFrame frame = new JFrame();
         frame.setSize(width, height);
@@ -219,407 +641,8 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         g.drawString(msg, (width - metr.stringWidth(msg)) / 2, width / 2);
     }
 
-    public void resetPlay() {
-        storedCol = 0;
-        storedRow = 0;
-        inPlay = false;
-        isJump = false;
-        for (int row = 0; row < numTilesPerRow; row++) {
-            for (int col = 0; col < numTilesPerRow; col++) {
-                availablePlays[col][row] = 0;
-            }
-        }
-        repaint();
-    }
-
-    public void criaVetorPulo() {
-        posicoesPulo.clear();
-        for (int row2 = 0; row2 < 8; row2++) {
-            for (int col2 = 0; col2 < 8; col2++) {
-                if (tipoMovimento[col2][row2] == JUMP) {
-                    int[] aux = {col2, row2};
-                    posicoesPulo.add(aux);
-                }
-            }
-        }
-    }
-
-    public boolean podePular(int col, int row) {
-        for (int i = 0; i < posicoesPulo.size(); i++) {
-            int[] res = (int[]) posicoesPulo.get(i);
-            if (res[0] == col && res[1] == row) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void verificaMovimentoPecas() {
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                if ((checkTeamPiece(col, row) == true)) { //checks if the piece is assigned to the current player
-                    if (corPlayer1 == RED) {
-                        if (gameData[col][row] == RED) {  // only goes north, checks the row above it's own
-                            getUp(col, row);
-                        }
-                        if (gameData[col][row] == WHITE) { // only goes south, checks the row below it's own
-                            getDown(col, row);
-                        }
-                    } else {
-                        if (gameData[col][row] == WHITE) {  // only goes north, checks the row above it's own
-                            getUp(col, row);
-                        }
-                        if (gameData[col][row] == RED) { // only goes south, checks the row below it's own
-                            getDown(col, row);
-                        }
-                    }
-
-                    if (gameData[col][row] == RED_KING || gameData[col][row] == WHITE_KING) { // Goes up OR down 1 row below it's own
-                        getUp(col, row);
-                        //getUp(col, row);
-                        getDown(col, row); // GET UP GET UP AND GET DOWN
-                    }
-                }
-                for (int row2 = 0; row2 < 8; row2++) {
-                    for (int col2 = 0; col2 < 8; col2++) {
-                        if (availablePlays[col2][row2] == 1) {
-                            if (col <= (col2 + 1) && col >= (col2 - 1)) { // esta em +1 ou -1 de coluna
-                                if (row <= (row2 + 1) && row >= (row2 - 1)) { // esta em +1 ou -1 de coluna
-                                    if (tipoMovimento[col][row] != JUMP) {
-                                        tipoMovimento[col][row] = WALK;
-                                    }
-                                } else {
-                                    tipoMovimento[col][row] = JUMP;
-                                }
-                            } else {
-                                tipoMovimento[col][row] = JUMP;
-                            }
-                        }
-                    }
-                }
-                zerarTipoAvailable();
-            }
-        }
-        criaVetorPulo();
-        if (posicoesPulo.size() > 0) {
-            puloObrigatorio = true;
-        } else {
-            puloObrigatorio = false;
-        }
-    }
-
-    public void mousePressed(java.awt.event.MouseEvent evt) {
-        int col = (evt.getX() - 8) / tileSize; // 8 is left frame length
-        int row = (evt.getY() - 30) / tileSize; // 30 is top frame length
-        colAt = col;
-        linAt = row;
-        if (puloObrigatorio && tipoMovimento[col][row] == JUMP || !puloObrigatorio) {
-            if (inPlay == false && gameData[col][row] != 0 || inPlay == true && checkTeamPiece(col, row) == true) {
-                resetPlay();
-                storedCol = col;
-                storedRow = row; // Sets the current click to instance variables to be used elsewhere
-
-                getAvailablePlays(col, row);
-            } else if (inPlay == true && availablePlays[col][row] == 1) {
-                makeMove(col, row, storedCol, storedRow);
-            } else if (inPlay == true && availablePlays[col][row] == 0) {
-                resetPlay();
-            }
-        } else {
-            if (inPlay == true && availablePlays[col][row] == 1) {
-                makeMove(col, row, storedCol, storedRow);
-            } else if (inPlay == true && availablePlays[col][row] == 0) {
-                resetPlay();
-            }
-        }
-    }
-
-    public void zerarTipoMovimento() {
-        for (int row = 0; row < numTilesPerRow; row++) {
-            for (int col = 0; col < numTilesPerRow; col++) {
-                tipoMovimento[col][row] = EMPTY;
-            }
-        }
-    }
-
-    public void zerarTipoAvailable() {
-        for (int row = 0; row < numTilesPerRow; row++) {
-            for (int col = 0; col < numTilesPerRow; col++) {
-                availablePlays[col][row] = 0;
-            }
-        }
-    }
-
-    public void swapPlayer() {
-        if (currentPlayer == corPlayer1) {
-            currentPlayer = EMPTY;
-        } else {
-            currentPlayer = corPlayer1;
-            zerarTipoMovimento();
-            verificaMovimentoPecas();
-        }
-
-    }
-
-    public void atualizarPosicao(int col, int row, int storedCol, int storedRow) {
-        int x = gameData[storedCol][storedRow]; //change the piece to new tile
-        gameData[col][row] = x;
-        gameData[storedCol][storedRow] = EMPTY; //change old piece location to EMPTY
-        checkKing(col, row);
-
-        if (abs((storedRow - row)) > 1) {
-            removePiece(col, row, storedCol, storedRow);
-        }
-        resetPlay();
-    }
-
-    public void makeMove(int col, int row, int storedCol, int storedRow) {
-        int x = gameData[storedCol][storedRow]; //change the piece to new tile
-        gameData[col][row] = x;
-        gameData[storedCol][storedRow] = EMPTY; //change old piece location to EMPTY
-        checkKing(col, row);
-        if (abs((storedRow - row)) > 1) {
-            removePiece(col, row, storedCol, storedRow);
-        }
-        resetPlay();
-        if (cliente == null) {
-            servidor.mandarMovimento(col, row, storedCol, storedRow);
-            servidor.setBloqueado(true);
-        } else {
-            cliente.mandarMovimento(col, row, storedCol, storedRow);
-            cliente.setBloqueado(true);
-        }
-        this.swapPlayer();
-    }
-
-    public boolean isKing(int col, int row) {
-        if (gameData[col][row] == RED_KING || gameData[col][row] == WHITE_KING) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public int checkOpponent(int col, int row) {
-        if (gameData[col][row] == RED || gameData[col][row] == RED_KING) {
-            return WHITE;
-        } else {
-            return RED;
-        }
-    }
-
-    public void checkExtraJumps(int col, int row) {
-        int opponent = checkOpponent(col, row);
-        int opponentKing = checkOpponent(col, row) + 1;
-        if (gameData[col - 1][row - 1] == opponent || gameData[col - 1][row - 1] == opponentKing) {
-            availablePlays[col - 1][row - 1] = 1;
-        } else if (gameData[col + 1][row - 1] == opponent || gameData[col + 1][row - 1] == opponentKing) {
-            availablePlays[col + 1][row - 1] = 1;
-        } else if (gameData[col - 1][row + 1] == opponent || gameData[col - 1][row + 1] == opponentKing) {
-            availablePlays[col - 1][row + 1] = 1;
-        } else if (gameData[col + 1][row + 1] == opponent || gameData[col + 1][row + 1] == opponentKing) {
-            availablePlays[col + 1][row + 1] = 1;
-        }
-        repaint();
-    }
-
-    public void checkKing(int col, int row) {
-        if (gameData[col][row] == RED && row == 0 && servidor != null) {
-            gameData[col][row] = RED_KING;
-        } else if (gameData[col][row] == WHITE && row == numTilesPerRow - 1 && servidor != null) {
-            gameData[col][row] = WHITE_KING;
-        } else {
-            if (gameData[col][row] == RED && row == numTilesPerRow - 1 && cliente != null) {
-                gameData[col][row] = RED_KING;
-            } else if (gameData[col][row] == WHITE && row == 0 && cliente != null) {
-                gameData[col][row] = WHITE_KING;
-            } else {
-                return;
-            }
-        }
-    }
-
-    public void removePiece(int col, int row, int storedCol, int storedRow) { //might be a better way to do this, but detects position of opponent piece based on destination and original position
-        int pieceRow = -1;
-        int pieceCol = -1;
-        if (col > storedCol && row > storedRow) {
-            pieceRow = row - 1;
-            pieceCol = col - 1;
-        }
-        if (col > storedCol && row < storedRow) {
-            pieceRow = row + 1;
-            pieceCol = col - 1;
-        }
-        if (col < storedCol && row > storedRow) {
-            pieceRow = row - 1;
-            pieceCol = col + 1;
-        }
-        if (col < storedCol && row < storedRow) {
-            pieceRow = row + 1;
-            pieceCol = col + 1;
-        }
-        gameData[pieceCol][pieceRow] = EMPTY;
-    }//TODO REWRITE
-
-    public void getAvailablePlays(int col, int row) {
-        inPlay = true;
-        if ((checkTeamPiece(col, row) == true)) { //checks if the piece is assigned to the current player
-            if (corPlayer1 == RED) {
-                if (gameData[col][row] == RED) {  // only goes north, checks the row above it's own
-                    getUp(col, row);
-                }
-                if (gameData[col][row] == WHITE) { // only goes south, checks the row below it's own
-                    getDown(col, row);
-                }
-            } else {
-                if (gameData[col][row] == WHITE) {  // only goes north, checks the row above it's own
-                    getUp(col, row);
-                }
-                if (gameData[col][row] == RED) { // only goes south, checks the row below it's own
-                    getDown(col, row);
-                }
-            }
-
-            if (gameData[col][row] == RED_KING || gameData[col][row] == WHITE_KING) { // Goes up OR down 1 row below it's own
-                getUp(col, row);
-                //getUp(col, row);
-                getDown(col, row); // GET UP GET UP AND GET DOWN
-            }
-            repaint();
-        }
-    }
-
-    public void getUp(int col, int row) { // Get Up availability
-        int rowUp = row - 1;
-        if (col == 0 && row != 0) { //X=0, Y is not 0
-            for (int i = col; i < col + 2; i++) { //check to right
-                if (gameData[col][row] != 0 && gameData[i][rowUp] != 0) {
-                    if (canJump(col, row, i, rowUp) == true) {
-                        int jumpCol = getJumpPos(col, row, i, rowUp)[0];
-                        int jumpRow = getJumpPos(col, row, i, rowUp)[1];
-                        availablePlays[jumpCol][jumpRow] = 1;
-                    }
-                } else if (baseGameData[i][rowUp] == 1 && gameData[i][rowUp] == 0) {
-                    availablePlays[i][rowUp] = 1;
-                }
-            }
-        } else if (col == (numTilesPerRow - 1) && row != 0) { //X=max, Y is not 0
-            if (gameData[col][row] != 0 && gameData[col - 1][rowUp] != 0) {
-                if (canJump(col, row, col - 1, rowUp) == true) {
-                    int jumpCol = getJumpPos(col, row, col - 1, rowUp)[0];
-                    int jumpRow = getJumpPos(col, row, col - 1, rowUp)[1];
-                    availablePlays[jumpCol][jumpRow] = 1;
-                }
-            } else if (baseGameData[col - 1][rowUp] == 1 && gameData[col - 1][rowUp] == 0) {
-                availablePlays[col - 1][rowUp] = 1;
-            }
-        } else if (col != numTilesPerRow - 1 && col != 0 && row != 0) {
-            for (int i = col - 1; i <= col + 1; i++) {
-                if (gameData[col][row] != 0 && gameData[i][rowUp] != 0) {
-                    if (canJump(col, row, i, rowUp) == true) {
-                        int jumpCol = getJumpPos(col, row, i, rowUp)[0];
-                        int jumpRow = getJumpPos(col, row, i, rowUp)[1];
-                        availablePlays[jumpCol][jumpRow] = 1;
-                    }
-                } else if (baseGameData[i][rowUp] == 1 && gameData[i][rowUp] == 0) {
-                    availablePlays[i][rowUp] = 1;
-                }
-            }
-        }
-    }
-
-    public void getDown(int col, int row) {
-        int rowDown = row + 1;
-        if (col == 0 && row != numTilesPerRow - 1) {
-            if (gameData[col][row] != 0 && gameData[col + 1][rowDown] != 0) {
-                if (canJump(col, row, col + 1, rowDown) == true) {
-                    int jumpCol = getJumpPos(col, row, col + 1, rowDown)[0];
-                    int jumpRow = getJumpPos(col, row, col + 1, rowDown)[1];
-                    availablePlays[jumpCol][jumpRow] = 1;
-                }
-            } else if (baseGameData[col + 1][rowDown] == 1 && gameData[col + 1][rowDown] == 0) {
-                availablePlays[col + 1][rowDown] = 1;
-            }
-        } else if (col == numTilesPerRow - 1 && row != numTilesPerRow - 1) {
-            if (gameData[col][row] != 0 && gameData[col - 1][rowDown] != 0) {
-                if (canJump(col, row, col - 1, rowDown) == true) {
-                    int jumpCol = getJumpPos(col, row, col - 1, rowDown)[0];
-                    int jumpRow = getJumpPos(col, row, col - 1, rowDown)[1];
-                    availablePlays[jumpCol][jumpRow] = 1;
-                }
-            } else if (baseGameData[col - 1][rowDown] == 1 && gameData[col - 1][rowDown] == 0) {
-                availablePlays[col - 1][rowDown] = 1;
-            }
-        } else if (col != numTilesPerRow - 1 && col != 0 && row != numTilesPerRow - 1) {
-            for (int i = col - 1; i <= col + 1; i++) {
-                if (gameData[col][row] != 0 && gameData[i][rowDown] != 0) {
-                    if (canJump(col, row, i, rowDown) == true) {
-                        int jumpCol = getJumpPos(col, row, i, rowDown)[0];
-                        int jumpRow = getJumpPos(col, row, i, rowDown)[1];
-                        availablePlays[jumpCol][jumpRow] = 1;
-                    }
-                } else if (baseGameData[i][rowDown] == 1 && gameData[i][rowDown] == 0) {
-                    availablePlays[i][rowDown] = 1;
-                }
-            }
-        }
-    }
-
-    public boolean checkTeamPiece(int col, int row) {
-        if (currentPlayer == RED && (gameData[col][row] == RED || gameData[col][row] == RED_KING)) //bottom
-        {
-            return true;
-        }
-        if (currentPlayer == WHITE && (gameData[col][row] == WHITE || gameData[col][row] == WHITE_KING)) //top
-        {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean isLegalPos(int col, int row) {
-        if (row < 0 || row >= numTilesPerRow || col < 0 || col >= numTilesPerRow) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    public boolean canJump(int col, int row, int opponentCol, int opponentRow) {
-        //Steps for checking if canJump is true: determine piece within movement. Then check if its an opponent piece, then if the space behind it is empty
-        //and in bounds
-        // 4 conditions based on column and row relations to the other piece
-        if (((gameData[col][row] == WHITE || gameData[col][row] == WHITE_KING) && (gameData[opponentCol][opponentRow] == RED || gameData[opponentCol][opponentRow] == RED_KING)) || (gameData[col][row] == RED || gameData[col][row] == RED_KING) && (gameData[opponentCol][opponentRow] == WHITE || gameData[opponentCol][opponentRow] == WHITE_KING)) {
-            //If the piece is white/red and opponent piece is opposite TODO fix this if. It's so ugly
-            if (opponentCol == 0 || opponentCol == numTilesPerRow - 1 || opponentRow == 0 || opponentRow == numTilesPerRow - 1) {
-                return false;
-            }
-            int[] toData = getJumpPos(col, row, opponentCol, opponentRow);
-            if (isLegalPos(toData[0], toData[1]) == false) //check board outofbounds
-            {
-                return false;
-            }
-            if (gameData[toData[0]][toData[1]] == 0) {
-                isJump = true;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public int[] getJumpPos(int col, int row, int opponentCol, int opponentRow) {
-        if (col > opponentCol && row > opponentRow && gameData[col - 2][row - 2] == 0) {
-            return new int[]{col - 2, row - 2};
-        } else if (col > opponentCol && row < opponentRow && gameData[col - 2][row + 2] == 0) {
-            return new int[]{col - 2, row + 2};
-        } else if (col < opponentCol && row > opponentRow && gameData[col + 2][row - 2] == 0) {
-            return new int[]{col + 2, row - 2};
-        } else {
-            return new int[]{col + 2, row + 2};
-        }
-    }
-
+    
+    
     // Methods that must be included for some reason? WHY
     public void mouseClicked(MouseEvent e) {
     }
