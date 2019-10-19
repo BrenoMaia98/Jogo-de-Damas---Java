@@ -19,6 +19,7 @@ import static java.lang.Math.abs;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class Tabuleiro extends JPanel implements ActionListener, MouseListener, Runnable {
@@ -253,19 +254,21 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
                 for (int row2 = 0; row2 < 8; row2++) {
                     for (int col2 = 0; col2 < 8; col2++) {
                         if (availablePlays[col2][row2] == 1) {// if possivel movimento
-                             //peça normal ou rainha
-                                if (row2 == row - 1 && (col2 == col + 1 || col2 == col - 1)) {// walk cima
-                                    if(tipoMovimento[col][row]!= JUMP)
-                                        tipoMovimento[col][row] = WALK;
-                                } else {
-                                    if (row2 == row - 2 && (col2 == col + 2 || col2 == col - 2)) { //jump cima
-                                        tipoMovimento[col][row] = JUMP;
-                                    }
+                            //peça normal ou rainha
+                            if (row2 == row - 1 && (col2 == col + 1 || col2 == col - 1)) {// walk cima
+                                if (tipoMovimento[col][row] != JUMP) {
+                                    tipoMovimento[col][row] = WALK;
                                 }
-                            if (gameData[col][row] == RED_KING|| gameData[col][row] == WHITE_KING) { // peça KING
+                            } else {
+                                if (row2 == row - 2 && (col2 == col + 2 || col2 == col - 2)) { //jump cima
+                                    tipoMovimento[col][row] = JUMP;
+                                }
+                            }
+                            if (gameData[col][row] == RED_KING || gameData[col][row] == WHITE_KING) { // peça KING
                                 if (row2 == row + 1 && (col2 == col + 1 || col2 == col - 1)) { //walk baixo
-                                     if(tipoMovimento[col][row]!= JUMP)
-                                         tipoMovimento[col][row] = WALK;
+                                    if (tipoMovimento[col][row] != JUMP) {
+                                        tipoMovimento[col][row] = WALK;
+                                    }
                                 } else {
                                     if (row2 == row + 2 && (col2 == col + 2 || col2 == col - 2)) { //jump baixo
                                         tipoMovimento[col][row] = JUMP;
@@ -394,11 +397,13 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         }
     }
 
-    public boolean gameOver() { //Wrapper for gameOverInternal
+    
+    
+    public int gameOver() { //Wrapper for gameOverInternal
         return gameOverInternal(0, 0, 0, 0);
     }
 
-    public boolean gameOverInternal(int col, int row, int red, int white) { //recursive practice
+    public int gameOverInternal(int col, int row, int red, int white) { //recursive practice
         if (gameData[col][row] == RED || gameData[col][row] == RED_KING) {
             red += 1;
         }
@@ -406,11 +411,13 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
             white += 1;
         }
         if (col == numTilesPerRow - 1 && row == numTilesPerRow - 1) {
-            if (red == 0 || white == 0) {
-                return true;
-            } else {
-                return false;
-            }
+            if (red == 0)
+                return WHITE;
+            else
+                if(white == 0)
+                return RED;
+                else return EMPTY;
+            
         }
         if (col == numTilesPerRow - 1) {
             row += 1;
@@ -481,17 +488,16 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         if ((corPlayer1 == RED && (gameData[col][row] == RED || gameData[col][row] == RED_KING)) || (corPlayer1 == WHITE && (gameData[col][row] == WHITE || gameData[col][row] == WHITE_KING))) {
             //peça NORMAL
             //cima direita
-            if (opponentRow == row - 1 && opponentCol == col + 1 && isLegalPos(col+2, row-2)){
-                if( gameData[col+2][row-2] == EMPTY && checkTeamPiece(opponentCol, opponentRow) == false){
+            if (opponentRow == row - 1 && opponentCol == col + 1 && isLegalPos(col + 2, row - 2)) {
+                if (gameData[col + 2][row - 2] == EMPTY && checkTeamPiece(opponentCol, opponentRow) == false) {
                     isJump = true;
                     return true;
                 }
             }
-            
-            
+
             //cima esquerda
-            if (opponentRow == row - 1  && opponentCol == col -1 && isLegalPos(col-2, row-2)){
-                if( gameData[col-2][row-2] == EMPTY&& checkTeamPiece(opponentCol, opponentRow) == false){
+            if (opponentRow == row - 1 && opponentCol == col - 1 && isLegalPos(col - 2, row - 2)) {
+                if (gameData[col - 2][row - 2] == EMPTY && checkTeamPiece(opponentCol, opponentRow) == false) {
                     isJump = true;
                     return true;
                 }
@@ -499,19 +505,19 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
             // peça KING
             if ((corPlayer1 == RED && gameData[col][row] == RED_KING) || (corPlayer1 == WHITE && gameData[col][row] == WHITE_KING)) {
                 //baixo direita
-                if (opponentRow == row + 1 && opponentCol == col + 1 && isLegalPos(col+2, row+2)){
-                    if( gameData[col+2][row+2] == EMPTY&& checkTeamPiece(opponentCol, opponentRow) == false){
-                    isJump = true;
-                    return true;
-                }
+                if (opponentRow == row + 1 && opponentCol == col + 1 && isLegalPos(col + 2, row + 2)) {
+                    if (gameData[col + 2][row + 2] == EMPTY && checkTeamPiece(opponentCol, opponentRow) == false) {
+                        isJump = true;
+                        return true;
+                    }
                 }
 
                 //baixo esquerda
-                if (opponentRow == row + 1  && opponentCol == col -1 && isLegalPos(col-2, row+2)){
-                    if( gameData[col-2][row+2] == EMPTY&& checkTeamPiece(opponentCol, opponentRow) == false){
-                    isJump = true;
-                    return true;
-                }
+                if (opponentRow == row + 1 && opponentCol == col - 1 && isLegalPos(col - 2, row + 2)) {
+                    if (gameData[col - 2][row + 2] == EMPTY && checkTeamPiece(opponentCol, opponentRow) == false) {
+                        isJump = true;
+                        return true;
+                    }
                 }
             } else {
                 isJump = false;
@@ -522,31 +528,6 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         return false;
     }
 
-    /*
-    public boolean canJump(int col, int row, int opponentCol, int opponentRow) {
-        //Steps for checking if canJump is true: determine piece within movement. Then check if its an opponent piece, then if the space behind it is empty
-        //and in bounds
-        // 4 conditions based on column and row relations to the other piece
-        if (((gameData[col][row] == WHITE || gameData[col][row] == WHITE_KING) && (gameData[opponentCol][opponentRow] == RED || gameData[opponentCol][opponentRow] == RED_KING)) || (gameData[col][row] == RED || gameData[col][row] == RED_KING) && (gameData[opponentCol][opponentRow] == WHITE || gameData[opponentCol][opponentRow] == WHITE_KING)) {
-            //If the piece is white/red and opponent piece is opposite TODO fix this if. It's so ugly
-            if (opponentCol == 0 || opponentCol == numTilesPerRow - 1 || opponentRow == 0 || opponentRow == numTilesPerRow - 1) {
-                isJump = false;
-                return false;
-            }
-            int[] toData = getJumpPos(col, row, opponentCol, opponentRow);
-            if (isLegalPos(toData[0], toData[1]) == false) //check board outofbounds
-            {
-                isJump = false;
-                return false;
-            }
-            if (gameData[toData[0]][toData[1]] == 0) {
-                isJump = true;
-                return true;
-            }
-        }
-        return false;
-    }
-     */
     public boolean checkTeamPiece(int col, int row) {
         if (currentPlayer == RED && (gameData[col][row] == RED || gameData[col][row] == RED_KING)) //bottom
         {
@@ -578,7 +559,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
             return new int[]{col + 2, row - 2};
         } else {
             //return new int[]{col + 2, row - 2};
-            if (corPlayer1 == WHITE  && gameData[col][row] != WHITE_KING) {
+            if (corPlayer1 == WHITE && gameData[col][row] != WHITE_KING) {
                 return new int[]{col - 2, row - 2};
             } else {
                 return new int[]{col + 2, row + 2};
@@ -611,14 +592,21 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
     }
 
     public void initializeBoard() {
-
+        zerarTipoAvailable();
+        zerarTipoMovimento();
+        isJump = false;
+        puloObrigatorio = false;
+        currentPlayer = RED;
+        
         //UPDATE THE STARTING POSITIONS
         for (int col = 0; col < (numTilesPerRow); col += 2) {
             gameData[col][5] = corPlayer1;
             gameData[col][7] = corPlayer1;
+            gameData[col][3] = EMPTY;
         }
         for (int col = 1; col < (numTilesPerRow); col += 2) {
             gameData[col][6] = corPlayer1;
+            gameData[col][4] = EMPTY;
         }
         for (int col = 1; col < (numTilesPerRow); col += 2) {
             gameData[col][0] = corPlayer2;
@@ -640,6 +628,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
     public void paint(Graphics g) { // This method paints the board
         //PRINT THE BOARD & PIECES
         super.paintComponent(g);
+        int ganhou;
         for (int row = 0; row < numTilesPerRow; row++) {
             for (int col = 0; col < numTilesPerRow; col++) {
                 if ((row % 2 == 0 && col % 2 == 0) || (row % 2 != 0 && col % 2 != 0)) { // This assigns the checkerboard pattern
@@ -688,7 +677,14 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
                 }
             }
         }
-        if (gameOver() == true) {
+        ganhou  = gameOver();
+        if (ganhou != EMPTY) {
+            
+            if (cliente == null) {
+            servidor.mandarMsg("Sair:"+ganhou);
+        } else {
+            cliente.mandarMensagem("Sair:"+ganhou);
+        }
             gameOverDisplay(g);
         }
     }
@@ -706,7 +702,6 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         return corPlayer1;
     }
 
-     
     // Methods that must be included for some reason? WHY
     public void mouseClicked(MouseEvent e) {
     }

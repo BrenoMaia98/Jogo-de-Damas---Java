@@ -138,7 +138,7 @@ public class TelaInicial extends javax.swing.JFrame {
         // TODO add your handling code here:
         String nome = apelido.getText();
         if(!" ".equals(nome) || !"".equals(nome)){
-            Cliente jogador = new Cliente();
+            Cliente jogador = new Cliente(nome);
             jogador.conectarServidor();
             jogador.start();
             
@@ -149,7 +149,7 @@ public class TelaInicial extends javax.swing.JFrame {
     private void IniciarPartidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_IniciarPartidaActionPerformed
         status.setText("Aguardando outro jogador...");
         String nome = apelido.getText();
-        if(!"".equals(nome) || !" ".equals(nome)){
+        if(!"".equals(nome) && !" ".equals(nome)){
             
             Servidor servidor;
             try {

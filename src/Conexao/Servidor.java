@@ -5,6 +5,7 @@
  */
 package Conexao;
 
+import Interface.CaixaDialogo;
 import Interface.Tabuleiro;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 /**
@@ -23,14 +25,15 @@ import javax.swing.JOptionPane;
 public final class Servidor extends Thread {
 
     private ServerSocket servidor;
-    private Jogador jogador1;
-    private Jogador jogador2;
+
     private Socket cliente;
     private BufferedReader in;
     private PrintWriter out;
     private Tabuleiro t;
+     public static final int EMPTY = 0, RED = 1,WHITE = 3;
+    private String nome;
     public Servidor(String nome) throws IOException {
-        jogador1 = new Jogador(nome, 'b');
+        this.nome = nome;
     }
 
     @Override
@@ -59,18 +62,26 @@ public final class Servidor extends Thread {
 
 
     public void setarDadosAdversario(String nome) {
-        jogador2 = new Jogador(nome, 'p');
         System.out.println("Partida iniciada!");
     }
 
     public void executar() {
+        int ganhou=0, resposta;
         boolean saiu = false;
+        String oponente="";
+        CaixaDialogo caixadialogo = new CaixaDialogo();
+        JFrame frame = new JFrame("Mensagem");
         String mensagem;
         try {
             mensagem = in.readLine();
             while (!saiu) {
                 String array[] = mensagem.split(":");
                 switch (array[0]) {
+                    case "Nome":
+                        oponente = array[1];
+                        mandarMsg("Nome:"+nome);
+                        break;
+                        
                     case "Movimento":
                         int linhaAnterior, colAnterior , linhaAtual, colAtual;
                         colAtual = Integer.parseInt(array[1]);
@@ -83,17 +94,43 @@ public final class Servidor extends Thread {
                         }
                         break;
                     case "Sair":
-                        System.out.println("Jogador " + jogador2.getNome() + " saiu da partida!");
-                        out.println("Obrigado por jogar!");
-                        saiu = true;
-                        fecharConexao();
+                        ganhou = Integer.parseInt(array[1]);
+                        if(ganhou == RED){
+                            resposta = JOptionPane.showConfirmDialog(frame, "Parabéns VOCÊ ganhou!\n Deseja desafiar "+oponente+" novamente?");
+                            if(resposta == 1 || resposta ==2){
+                                saiu = true;   
+                                out.println("EncerrarPartida:"+ganhou);
+                            }
+                            else
+                                out.println("JogarNovamente:"+ganhou);
+                        }
                         break;
+                    case "JogarNovamente":
+                        caixadialogo.start();
+                        resposta = caixadialogo.ConfirmDialog(oponente+" deseja te desafiar novamente, você aceita?");
+                            if(resposta == 1 || resposta ==2){
+                                saiu = true;   
+                                out.println("EncerrarPartida:"+ganhou);
+                            }
+                            else{
+                                t.initializeBoard();
+                                t.repaint();
+                                out.println("RestartGame");
+                            }
+                        break;
+                    case "EncerrarPartida":
+                        if(ganhou == RED)
+                            caixadialogo.ShowMessage("Você ganhou e "+oponente+" não deseja jogar novamente");
+                        if(ganhou == WHITE)
+                            caixadialogo.ShowMessage(oponente+" ganhou e não deseja jogar novamente");
+                        break;
+                    case "RestartGame":
+                          t.initializeBoard();
+                          t.repaint();
+                          break;
                     case "NaoTenhoJogadas":
                         if(t.currentPlayer != t.getCorPlayer1())
-                        t.swapPlayer();
-                        break;
-                    case "NaoTenhoPecas":
-                        
+                            t.swapPlayer();
                         break;
                     default:
                         break;
@@ -102,6 +139,7 @@ public final class Servidor extends Thread {
                     mensagem = in.readLine();
                 }
             }
+            fecharConexao();
         } catch (IOException ex) {
             Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
         }

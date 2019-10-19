@@ -5,6 +5,7 @@
  */
 package Conexao;
 
+import Interface.CaixaDialogo;
 import Interface.Tabuleiro;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,6 +14,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -24,7 +27,10 @@ public class Cliente extends Thread{
     private BufferedReader in;
     private PrintWriter out;
     private Tabuleiro t;
-    public Cliente() {
+    private String nome;
+     public static final int EMPTY = 0, RED = 1,WHITE = 3;
+    public Cliente(String nome) {
+       this.nome = nome;
     }
 
 
@@ -53,13 +59,22 @@ public class Cliente extends Thread{
     }
 
     public void run() {
+        int ganhou=0, resposta;
         boolean saiu = false;
-        String mensagem;
+        String oponente="";
+        CaixaDialogo caixadialogo = new CaixaDialogo();
+        JFrame frame = new JFrame("Mensagem");
+        String mensagem="";
         try {
-            mensagem = in.readLine();
+            out.println("Nome:"+nome);
+            while(mensagem.equals(""))
+             mensagem = in.readLine();
             while (!saiu) {
                 String array[] = mensagem.split(":");
                 switch (array[0]) {
+                    case "Nome":
+                        oponente = array[1];
+                        break;
                     case "Movimento":
                         int linhaAnterior, colAnterior , linhaAtual, colAtual;
                         colAtual = Integer.parseInt(array[1]);
@@ -72,12 +87,41 @@ public class Cliente extends Thread{
                         }
                         break;
                     case "Sair":
-                        out.println("Obrigado por jogar!");
-                        saiu = true;
+                        ganhou = Integer.parseInt(array[1]);
+
+                        if(ganhou == WHITE){
+                            resposta = JOptionPane.showConfirmDialog(frame, "Parabéns VOCÊ ganhou!\n Deseja desafiar "+oponente+" novamente?");
+                            if(resposta == 1 || resposta ==2){
+                                saiu = true;   
+                                out.println("EncerrarPartida:"+ganhou);
+                            }
+                            else
+                                out.println("JogarNovamente:"+ganhou);
+                        }
                         break;
-                    case "NaoTenhoJogadas":
-                        t.swapPlayer();
+                    case "EncerrarPartida":
+                        if(ganhou == WHITE)
+                            caixadialogo.ShowMessage("Você ganhou e "+oponente+" não deseja jogar novamente");
+                        if(ganhou == RED)
+                            caixadialogo.ShowMessage(oponente+" ganhou e não deseja jogar novamente");
                         break;
+                    case "JogarNovamente":
+                        caixadialogo.start();
+                        resposta = caixadialogo.ConfirmDialog(oponente+" deseja te desafiar novamente, você aceita?");
+                            if(resposta == 1 || resposta ==2){
+                                saiu = true;   
+                                out.println("EncerrarPartida:"+ganhou);
+                            }
+                            else{
+                                t.initializeBoard();
+                                t.repaint();
+                                out.println("RestartGame");
+                            }
+                        break;
+                    case "RestartGame":
+                          t.initializeBoard();
+                          t.repaint();
+                          break;
                     default:
                         break;
                 }
@@ -85,6 +129,7 @@ public class Cliente extends Thread{
                     mensagem = in.readLine();
                 }
             }
+            encerrarConexao();
         } catch (IOException ex) {
             Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -98,6 +143,7 @@ public class Cliente extends Thread{
         c = 7 - colAnterior;
         d = 7 - linhaAnterior;
         String movimento = "Movimento:" + a + ":" + b + ":" + c + ":" + d;
+        // movimento = "Sair:" + RED;
         if(t.puloObrigatorio) movimento +=":++"; // caso tenha um próximo pulo deve avisar o adversário
         out.println(movimento);
     }
