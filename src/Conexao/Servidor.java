@@ -89,7 +89,11 @@ public final class Servidor extends Thread {
                         fecharConexao();
                         break;
                     case "NaoTenhoJogadas":
+                        if(t.currentPlayer != t.getCorPlayer1())
                         t.swapPlayer();
+                        break;
+                    case "NaoTenhoPecas":
+                        
                         break;
                     default:
                         break;
@@ -111,7 +115,8 @@ public final class Servidor extends Thread {
         c = 7 - colAnterior;
         d = 7 - linhaAnterior;
         String movimento = "Movimento:" + a + ":" + b + ":" + c + ":" + d;
-        if(t.isJump) movimento +=":++"; // caso tenha um próximo pulo deve avisar o adversário
+        if(t.puloObrigatorio) 
+            movimento +=":++"; // caso tenha um próximo pulo deve avisar o adversário
         out.println(movimento);
     }
     

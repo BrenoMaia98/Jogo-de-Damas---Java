@@ -16,8 +16,6 @@ import java.awt.event.*;
 import java.awt.image.*;
 import java.io.*;
 import static java.lang.Math.abs;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -42,6 +40,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
     public static int[][] tipoMovimento = new int[numTilesPerRow][numTilesPerRow]; //Stores available plays in an 8x8
     public int storedRow, storedCol;
     public boolean isJump = false;
+    public boolean noPieces = false;
     static BufferedImage crownImage = null;
     private int corPlayer1, corPlayer2;
     private Servidor servidor;
@@ -170,13 +169,12 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
                 verificaMovimentoPecas();
 
                 if (!puloObrigatorio) {
-                    this.swapPlayer();
                     if (cliente == null) {
                         servidor.mandarMsg("NaoTenhoJogadas");
                     } else {
                         cliente.mandarMsg("NaoTenhoJogadas");
                     }
-
+                    this.swapPlayer();
                 }
             } else {
                 this.swapPlayer();
@@ -254,17 +252,25 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
                 }
                 for (int row2 = 0; row2 < 8; row2++) {
                     for (int col2 = 0; col2 < 8; col2++) {
-                        if (availablePlays[col2][row2] == 1) {
-                            if (col <= (col2 + 1) && col >= (col2 - 1)) { // esta em +1 ou -1 de coluna
-                                if (row <= (row2 + 1) && row >= (row2 - 1)) { // esta em +1 ou -1 de coluna
-                                    if (tipoMovimento[col][row] != JUMP) {
+                        if (availablePlays[col2][row2] == 1) {// if possivel movimento
+                             //peça normal ou rainha
+                                if (row2 == row - 1 && (col2 == col + 1 || col2 == col - 1)) {// walk cima
+                                    if(tipoMovimento[col][row]!= JUMP)
                                         tipoMovimento[col][row] = WALK;
-                                    }
                                 } else {
-                                    tipoMovimento[col][row] = JUMP;
+                                    if (row2 == row - 2 && (col2 == col + 2 || col2 == col - 2)) { //jump cima
+                                        tipoMovimento[col][row] = JUMP;
+                                    }
                                 }
-                            } else {
-                                tipoMovimento[col][row] = JUMP;
+                            if (gameData[col][row] == RED_KING|| gameData[col][row] == WHITE_KING) { // peça KING
+                                if (row2 == row + 1 && (col2 == col + 1 || col2 == col - 1)) { //walk baixo
+                                     if(tipoMovimento[col][row]!= JUMP)
+                                         tipoMovimento[col][row] = WALK;
+                                } else {
+                                    if (row2 == row + 2 && (col2 == col + 2 || col2 == col - 2)) { //jump baixo
+                                        tipoMovimento[col][row] = JUMP;
+                                    }
+                                }
                             }
                         }
                     }
@@ -310,7 +316,6 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
             currentPlayer = corPlayer1;
             verificaMovimentoPecas();
         }
-
     }
 
     public void getUp(int col, int row) { // Get Up availability
@@ -473,6 +478,52 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
     }
 
     public boolean canJump(int col, int row, int opponentCol, int opponentRow) {
+        if ((corPlayer1 == RED && (gameData[col][row] == RED || gameData[col][row] == RED_KING)) || (corPlayer1 == WHITE && (gameData[col][row] == WHITE || gameData[col][row] == WHITE_KING))) {
+            //peça NORMAL
+            //cima direita
+            if (opponentRow == row - 1 && opponentCol == col + 1 && isLegalPos(col+2, row-2)){
+                if( gameData[col+2][row-2] == EMPTY && checkTeamPiece(opponentCol, opponentRow) == false){
+                    isJump = true;
+                    return true;
+                }
+            }
+            
+            
+            //cima esquerda
+            if (opponentRow == row - 1  && opponentCol == col -1 && isLegalPos(col-2, row-2)){
+                if( gameData[col-2][row-2] == EMPTY&& checkTeamPiece(opponentCol, opponentRow) == false){
+                    isJump = true;
+                    return true;
+                }
+            }
+            // peça KING
+            if ((corPlayer1 == RED && gameData[col][row] == RED_KING) || (corPlayer1 == WHITE && gameData[col][row] == WHITE_KING)) {
+                //baixo direita
+                if (opponentRow == row + 1 && opponentCol == col + 1 && isLegalPos(col+2, row+2)){
+                    if( gameData[col+2][row+2] == EMPTY&& checkTeamPiece(opponentCol, opponentRow) == false){
+                    isJump = true;
+                    return true;
+                }
+                }
+
+                //baixo esquerda
+                if (opponentRow == row + 1  && opponentCol == col -1 && isLegalPos(col-2, row+2)){
+                    if( gameData[col-2][row+2] == EMPTY&& checkTeamPiece(opponentCol, opponentRow) == false){
+                    isJump = true;
+                    return true;
+                }
+                }
+            } else {
+                isJump = false;
+                return false;
+            }
+        }
+        isJump = false;
+        return false;
+    }
+
+    /*
+    public boolean canJump(int col, int row, int opponentCol, int opponentRow) {
         //Steps for checking if canJump is true: determine piece within movement. Then check if its an opponent piece, then if the space behind it is empty
         //and in bounds
         // 4 conditions based on column and row relations to the other piece
@@ -495,7 +546,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         }
         return false;
     }
-
+     */
     public boolean checkTeamPiece(int col, int row) {
         if (currentPlayer == RED && (gameData[col][row] == RED || gameData[col][row] == RED_KING)) //bottom
         {
@@ -526,7 +577,8 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         } else if (col < opponentCol && row > opponentRow && gameData[col + 2][row - 2] == 0) {
             return new int[]{col + 2, row - 2};
         } else {
-            if (corPlayer1 == WHITE) {
+            //return new int[]{col + 2, row - 2};
+            if (corPlayer1 == WHITE  && gameData[col][row] != WHITE_KING) {
                 return new int[]{col - 2, row - 2};
             } else {
                 return new int[]{col + 2, row + 2};
@@ -643,13 +695,18 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
 
     public void gameOverDisplay(Graphics g) { //Displays the game over message
         String msg = "Game Over";
-        Font small = new Font("Helvetica", Font.BOLD, 20);
+        Font small = new Font("Helvetica", Font.BOLD, 30);
         FontMetrics metr = getFontMetrics(small);
         g.setColor(Color.white);
         g.setFont(small);
         g.drawString(msg, (width - metr.stringWidth(msg)) / 2, width / 2);
     }
 
+    public int getCorPlayer1() {
+        return corPlayer1;
+    }
+
+     
     // Methods that must be included for some reason? WHY
     public void mouseClicked(MouseEvent e) {
     }

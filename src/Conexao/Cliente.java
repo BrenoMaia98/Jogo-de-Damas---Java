@@ -68,7 +68,7 @@ public class Cliente extends Thread{
                         linhaAnterior = Integer.parseInt(array[4]);
                         t.atualizarPosicao(colAtual, linhaAtual,colAnterior,linhaAnterior);
                         if(array.length != 6){
-                            t.swapPlayer();// verique se o outro tem pulo encadeado
+                            t.swapPlayer(); // verique se o outro tem pulo encadeado
                         }
                         break;
                     case "Sair":
@@ -98,7 +98,7 @@ public class Cliente extends Thread{
         c = 7 - colAnterior;
         d = 7 - linhaAnterior;
         String movimento = "Movimento:" + a + ":" + b + ":" + c + ":" + d;
-        if(t.isJump) movimento +=":++"; // caso tenha um próximo pulo deve avisar o adversário
+        if(t.puloObrigatorio) movimento +=":++"; // caso tenha um próximo pulo deve avisar o adversário
         out.println(movimento);
     }
 
