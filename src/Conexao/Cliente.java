@@ -105,6 +105,9 @@ public class Cliente extends Thread{
                         if(ganhou == RED)
                             caixadialogo.ShowMessage(oponente+" ganhou e não deseja jogar novamente");
                         break;
+                    case "NaoTenhoJogadas":
+                        t.swapPlayer();
+                        break;
                     case "JogarNovamente":
                         caixadialogo.start();
                         resposta = caixadialogo.ConfirmDialog(oponente+" deseja te desafiar novamente, você aceita?");
