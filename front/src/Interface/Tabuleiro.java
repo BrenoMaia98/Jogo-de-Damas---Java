@@ -16,6 +16,10 @@ import java.awt.event.*;
 import java.awt.image.*;
 import java.io.*;
 import static java.lang.Math.abs;
+import java.sql.Date;
+import java.sql.Time;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -23,18 +27,20 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class Tabuleiro extends JPanel implements ActionListener, MouseListener, Runnable {
-
+    
     private static final long serialVersionUID = 1L; //Why? TODO GOOGLE
+
+    /*variaveis para estabelecimento do tabuleiro*/
+    public static JFrame frame;
     public static int width = 720, height = width; //square parameters. Optimized for any square resolution TODO any resolution to be squared
     public static final int tileSize = width / 8; //8 Tiles for checkers board
     public static final int numTilesPerRow = width / tileSize;
-    public static int[][] baseGameData = new int[numTilesPerRow][numTilesPerRow]; //Stores 8x8 board layout
     public static int[][] gameData = new int[numTilesPerRow][numTilesPerRow]; //Stores piece data in an 8x8
+    public static int[][] baseGameData = new int[numTilesPerRow][numTilesPerRow]; //Stores 8x8 board layout
+    static BufferedImage crownImage = null;
+
+    /*variaveis para o funcionamento do jogo*/
     public static final int EMPTY = 0, RED = 1, RED_KING = 2, WHITE = 3, WHITE_KING = 4, JUMP = 5, WALK = 6; //Values for gameData
-    public static JFrame frame;
-    public boolean gameInProgress = true;
-    public int currentPlayer = RED;
-    public boolean inPlay = false; //Is there a move function processing?
     public ArrayList posicoesPulo;
     public boolean puloObrigatorio = false;
     public static int[][] availablePlays = new int[numTilesPerRow][numTilesPerRow]; //Stores available plays in an 8x8
@@ -42,12 +48,28 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
     public int storedRow, storedCol;
     public boolean isJump = false;
     public boolean noPieces = false;
-    static BufferedImage crownImage = null;
-    private int corPlayer1, corPlayer2;
-    private Servidor servidor;
-    private int colAt, linAt;
-    private Cliente cliente;
 
+    /*variaveis para estatísticas do jogo*/
+    private int pontuacaoP1 = 0, pontuacaoP2 = 0;
+    private int qtdDamasP1 = 0, qtdDamasP2 = 0;
+    private LocalTime horarioPartida;
+    private LocalDate dataPartida;
+    private String nomeP1 , nomeP2;
+    private boolean empate = false;
+
+
+    /*variaveis de controle de turno*/
+    public boolean inPlay = false; //Is there a move function processing?
+    public int currentPlayer = RED;
+    private int corPlayer1, corPlayer2;
+    public boolean gameInProgress = true;
+    private int colAt, linAt;
+
+    /*Conexão com o outro jogador*/
+    private Servidor servidor;
+    private Cliente cliente;
+    
+    
     @Override
     public void run() {
         try {
@@ -68,6 +90,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         this.servidor = servidor;
         this.cliente = null;
         this.posicoesPulo = new ArrayList();
+        this.dataPartida = LocalDate.now();
     }
 
     public Tabuleiro(Cliente cliente) {
@@ -77,6 +100,14 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         this.servidor = null;
         this.cliente = cliente;
         this.posicoesPulo = new ArrayList();
+        this.dataPartida = LocalDate.now();
+    }
+ public void setNomeP1(String nomeP1) {
+        this.nomeP1 = nomeP1;
+    }
+
+    public void setNomeP2(String nomeP2) {
+        this.nomeP2 = nomeP2;
     }
 
     //funções controle de variaveis
@@ -470,13 +501,33 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
 
     public void checkKing(int col, int row) {
         if (gameData[col][row] == RED && row == 0 && servidor != null) {
+            if (corPlayer1 == RED) {
+                this.qtdDamasP1++;
+            } else {
+                this.qtdDamasP2++;
+            }
             gameData[col][row] = RED_KING;
         } else if (gameData[col][row] == WHITE && row == numTilesPerRow - 1 && servidor != null) {
+            if (corPlayer1 == WHITE) {
+                this.qtdDamasP1++;
+            } else {
+                this.qtdDamasP2++;
+            }
             gameData[col][row] = WHITE_KING;
         } else {
             if (gameData[col][row] == RED && row == numTilesPerRow - 1 && cliente != null) {
+                if (corPlayer1 == RED) {
+                    this.qtdDamasP1++;
+                } else {
+                    this.qtdDamasP2++;
+                }
                 gameData[col][row] = RED_KING;
             } else if (gameData[col][row] == WHITE && row == 0 && cliente != null) {
+                if (corPlayer1 == WHITE) {
+                    this.qtdDamasP1++;
+                } else {
+                    this.qtdDamasP2++;
+                }
                 gameData[col][row] = WHITE_KING;
             } else {
                 return;
@@ -629,6 +680,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         //PRINT THE BOARD & PIECES
         super.paintComponent(g);
         int ganhou;
+        String playerWin;
         for (int row = 0; row < numTilesPerRow; row++) {
             for (int col = 0; col < numTilesPerRow; col++) {
                 if ((row % 2 == 0 && col % 2 == 0) || (row % 2 != 0 && col % 2 != 0)) { // This assigns the checkerboard pattern
@@ -680,7 +732,28 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         ganhou  = gameOver();
         if (ganhou != EMPTY) {
             
-            if (cliente == null) {
+            if (cliente == null) {  
+                /*Date data, Time horario, String jogador_1, String jogador_2, String vencedor, boolean empate*/
+                /*
+                inserirRegistroPartida(
+                Date.valueOf(this.dataPartida) ,
+                Time.valueOf(this.horarioPartida) ,
+                this.nomeP1 ,
+                this.nomeP2 ,
+                playerWin ,
+                this.emapate
+                )
+                */
+                
+                /*nome , */
+                /*
+                
+                */
+                if(ganhou == this.corPlayer1)
+                        playerWin = this.nomeP1;
+                        else
+                            playerWin = this.nomeP2;
+                        
             servidor.mandarMsg("Sair:"+ganhou);
         } else {
             cliente.mandarMensagem("Sair:"+ganhou);

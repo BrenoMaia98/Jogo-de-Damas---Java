@@ -74,6 +74,8 @@ public class Cliente extends Thread{
                 switch (array[0]) {
                     case "Nome":
                         oponente = array[1];
+                        t.setNomeP1(nome);
+                        t.setNomeP2(oponente);
                         break;
                     case "Movimento":
                         int linhaAnterior, colAnterior , linhaAtual, colAtual;
