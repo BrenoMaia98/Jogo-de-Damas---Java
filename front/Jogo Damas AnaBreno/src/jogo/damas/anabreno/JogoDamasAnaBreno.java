@@ -3,24 +3,20 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package jogo;
+package jogo.damas.anabreno;
 
-import Conexao.Cliente;
-import Conexao.Servidor;
 import Interface.TelaInicial;
-import java.io.IOException;
-import javax.swing.JOptionPane;
 
 /**
  *
  * @author Breno
  */
-public class main {
+public class JogoDamasAnaBreno {
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         // TODO code application logic here
         new TelaInicial().setVisible(true);
     }
