@@ -46,9 +46,6 @@
                                    jogador_2 = res.getString("jogador_2"),
                                    vencedor = res.getString("vencedor"),
                                    empate = res.getString("empate");
-                            System.out.println(data);
-                            System.out.println(horario);
-                            System.out.println(jogador_1);
                             %>
                             <tr>
                                 <td><%= data %></td>
@@ -65,32 +62,36 @@
             <strong>Classificação</strong>
             <table>
                 <tr>
-                    <th>Jogador</th>
                     <th>Posição</th>
+                    <th>Jogador</th>
                     <th>Pontuação</th>
                     <th>N° Vitórias</th>
                     <th>N° Empates</th>
                     <th>N° Derrotas</th>
                     <th>Saldo de damas</th>
                 </tr>
-                <tr>
-                    <td>Breno</td>
-                    <td>1</td>
-                    <td>10</td>
-                    <td>1</td>
-                    <td>1</td>
-                    <td>0</td>
-                    <td>20</td>
-                </tr>
-                <tr>
-                    <td>Ana</td>
-                    <td>2</td>
-                    <td>5</td>
-                    <td>0</td>
-                    <td>1</td>
-                    <td>1</td>
-                    <td>10</td>
-                </tr>
+                <%
+                    db.connect("jogodamas");
+                    res = db.obterClassificacao();
+                        while (res.next()){
+                            String nome_jogador = res.getString("nome_jogador");
+                            int posicao = res.getInt("posicao"),
+                                pontuacao = res.getInt("pontuacao"),
+                                numero_vitorias = res.getInt("numero_vitorias"),
+                                numero_empates = res.getInt("numero_empates"),
+                                numero_derrotas = res.getInt("numero_derrotas"),
+                                saldo_damas = res.getInt("saldo_damas");
+                            %>
+                            <tr>
+                                <td><%= posicao %></td>
+                                <td><%= nome_jogador %></td>
+                                <td><%= pontuacao %></td>
+                                <td><%= numero_vitorias %></td>
+                                <td><%= numero_empates %></td>
+                                <td><%= numero_derrotas %></td>
+                                <td><%= saldo_damas %></td>
+                            </tr>
+                <%}%>
             </table>
         </div>
     </body>

@@ -42,8 +42,62 @@ public class Database {
 		stmt.executeUpdate(sql);
         }
         
+        public void inserirPontuacaoJogador(String nome_jogador, int saldo_damas, String situacao) throws SQLException{
+                boolean jogadorJaCadastrado = false;
+                int pontuacao = 0, numero_vitorias = 0, numero_empates = 0, numero_derrotas = 0;
+                switch(situacao){
+                    case "vitoria":
+                        pontuacao+=10;
+                        numero_vitorias++;
+                        break;
+                    case "derrota":
+                        numero_derrotas++;
+                        break;
+                    case "empate":
+                        pontuacao+=5;
+                        numero_empates++;
+                        break;
+                }
+                String sql = "SELECT * FROM `classificacao` WHERE nome_jogador='"+nome_jogador+"'";
+                ResultSet res = stmt.executeQuery(sql);
+               
+                while (res.next()){
+                    jogadorJaCadastrado = true;
+                    pontuacao = res.getInt("pontuacao")+pontuacao;
+                    numero_vitorias = res.getInt("numero_vitorias")+numero_vitorias;
+                    numero_empates = res.getInt("numero_empates")+numero_empates;
+                    numero_derrotas = res.getInt("numero_derrotas");
+                    saldo_damas = res.getInt("saldo_damas")+saldo_damas;
+                }
+  
+                if(!jogadorJaCadastrado){
+                    sql = "INSERT INTO `classificacao` (`nome_jogador`, `pontuacao`, `numero_vitorias`, `numero_empates`, `numero_derrotas`, `saldo_damas`)"
+				+ "VALUES ('"+nome_jogador+"',"+pontuacao+", "+numero_vitorias+", "+numero_empates+","+numero_derrotas+","+saldo_damas+")";
+                    stmt.executeUpdate(sql);
+                }
+                else{
+                    updatePontuacaoJogador(nome_jogador, pontuacao, numero_vitorias, numero_empates, numero_derrotas, saldo_damas);
+                }
+                
+        }
+        
+        public void updatePontuacaoJogador(String nome_jogador, int pontuacao, int numero_vitorias, int numero_empates, int numero_derrotas, int saldo_damas) throws SQLException{          
+                String sql = "UPDATE `classificacao` SET pontuacao="+pontuacao+",numero_vitorias="+numero_vitorias+
+                        ",numero_empates="+numero_empates+",numero_derrotas="+numero_derrotas+",saldo_damas="+saldo_damas+" WHERE nome_jogador='"+nome_jogador+"'";
+		stmt.executeUpdate(sql);
+        }
+        
         public ResultSet obterHistorico() throws SQLException{
                 String sql = "SELECT * FROM historico";
+		ResultSet res = stmt.executeQuery(sql);
+                return res;
+        }
+        
+        public ResultSet obterClassificacao() throws SQLException{
+            stmt.executeQuery("SET @row_number := 0;");
+                String sql = "SELECT " +
+                            "(@row_number:=@row_number + 1) AS posicao, nome_jogador, pontuacao, "+
+                            "numero_vitorias, numero_empates, numero_derrotas, saldo_damas FROM classificacao ORDER BY pontuacao";
 		ResultSet res = stmt.executeQuery(sql);
                 return res;
         }
