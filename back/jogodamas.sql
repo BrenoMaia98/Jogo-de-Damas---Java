@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 02-Dez-2019 às 02:47
+-- Generation Time: 02-Dez-2019 às 03:42
 -- Versão do servidor: 10.1.35-MariaDB
 -- versão do PHP: 7.2.9
 
@@ -37,6 +37,15 @@ CREATE TABLE `classificacao` (
   `saldo_damas` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Extraindo dados da tabela `classificacao`
+--
+
+INSERT INTO `classificacao` (`nome_jogador`, `pontuacao`, `numero_vitorias`, `numero_empates`, `numero_derrotas`, `saldo_damas`) VALUES
+('Freeza', 10, 1, 0, 0, 5),
+('Goku', 40, 5, 0, 1, 18),
+('Yamcha', -50, 0, 0, 5, -23);
+
 -- --------------------------------------------------------
 
 --
@@ -58,7 +67,12 @@ CREATE TABLE `historico` (
 --
 
 INSERT INTO `historico` (`id`, `data`, `horario`, `jogador_1`, `jogador_2`, `vencedor`, `empate`) VALUES
-(1, '2019-12-01', '17:52:11', 'Ana', 'Breno', 'Ana', '0');
+(2, '2019-12-02', '00:02:03', 'Goku', 'Freeza', 'Freeza', '0'),
+(3, '2019-12-03', '08:08:06', 'Goku', 'Yamcha', 'Goku', '0'),
+(4, '2019-12-04', '16:21:08', 'Goku', 'Yamcha', 'Goku', '0'),
+(5, '2019-12-05', '19:20:37', 'Goku', 'Yamcha', 'Goku', '0'),
+(6, '2019-12-06', '19:09:39', 'Goku', 'Yamcha', 'Goku', '0'),
+(7, '2019-12-07', '22:09:40', 'Goku', 'Yamcha', 'Goku', '0');
 
 --
 -- Indexes for dumped tables
@@ -84,7 +98,7 @@ ALTER TABLE `historico`
 -- AUTO_INCREMENT for table `historico`
 --
 ALTER TABLE `historico`
-  MODIFY `id` int(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
