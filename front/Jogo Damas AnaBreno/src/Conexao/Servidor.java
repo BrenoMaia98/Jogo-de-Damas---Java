@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
@@ -45,12 +46,16 @@ public final class Servidor extends Thread {
             Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InterruptedException ex) {
             Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
         }
         System.out.println("Aguardando outro jogador...");
 
     }
 
-    public void conectar() throws IOException, InterruptedException {
+    public void conectar() throws IOException, InterruptedException, SQLException, ClassNotFoundException {
         cliente = servidor.accept();
         out = new PrintWriter(cliente.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(cliente.getInputStream()));
@@ -80,6 +85,8 @@ public final class Servidor extends Thread {
                     case "Nome":
                         oponente = array[1];
                         mandarMsg("Nome:"+nome);
+                        t.setNomeP1(this.nome);
+                        t.setNomeP2(oponente);
                         break;
                         
                     case "Movimento":

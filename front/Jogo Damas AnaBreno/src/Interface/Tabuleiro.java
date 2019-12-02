@@ -11,23 +11,28 @@ package Interface;
  */
 import Conexao.Cliente;
 import Conexao.Servidor;
+import database.Database;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
 import java.io.*;
 import static java.lang.Math.abs;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class Tabuleiro extends JPanel implements ActionListener, MouseListener, Runnable {
-    
+
     private static final long serialVersionUID = 1L; //Why? TODO GOOGLE
 
     /*variaveis para estabelecimento do tabuleiro*/
@@ -54,8 +59,10 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
     private int qtdDamasP1 = 0, qtdDamasP2 = 0;
     private LocalTime horarioPartida;
     private LocalDate dataPartida;
-    private String nomeP1 , nomeP2;
+    private String nomeP1, nomeP2;
     private boolean empate = false;
+    private String playerWin;
+    private ZoneId brasil = ZoneId.of("Brazil/East");
 
 
     /*variaveis de controle de turno*/
@@ -68,8 +75,10 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
     /*Conexão com o outro jogador*/
     private Servidor servidor;
     private Cliente cliente;
-    
-    
+
+    /*Conexão com  o banco de dados*/
+    private Database dbconnection;
+
     @Override
     public void run() {
         try {
@@ -83,26 +92,33 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         repaint(); // This is included in the JVM. Runs paint.
     }
 
-    public Tabuleiro(Servidor servidor) {
+    public Tabuleiro(Servidor servidor) throws SQLException, ClassNotFoundException {
         currentPlayer = RED;
         this.corPlayer1 = RED;
         this.corPlayer2 = WHITE;
         this.servidor = servidor;
         this.cliente = null;
         this.posicoesPulo = new ArrayList();
-        this.dataPartida = LocalDate.now();
+        this.dataPartida = LocalDate.now(this.brasil);
+        this.dbconnection = new Database("127.0.0.1", 3306, "root", "");
+        dbconnection.connect("jogodamas");
+
     }
 
-    public Tabuleiro(Cliente cliente) {
+    public Tabuleiro(Cliente cliente) throws SQLException, ClassNotFoundException {
         currentPlayer = EMPTY;
         this.corPlayer1 = WHITE;
         this.corPlayer2 = RED;
         this.servidor = null;
         this.cliente = cliente;
         this.posicoesPulo = new ArrayList();
-        this.dataPartida = LocalDate.now();
+        this.dataPartida = LocalDate.now(this.brasil);
+        this.dbconnection = new Database("127.0.0.1", 3306, "root", "");
+        dbconnection.connect("jogodamas");
+
     }
- public void setNomeP1(String nomeP1) {
+
+    public void setNomeP1(String nomeP1) {
         this.nomeP1 = nomeP1;
     }
 
@@ -188,6 +204,23 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         checkKing(col, row);
         if (abs((storedRow - row)) > 1) {
             removePiece(col, row, storedCol, storedRow);
+            //DELETAR ABAIXO
+            this.playerWin = this.nomeP2;
+                
+                try {
+                    this.horarioPartida = LocalTime.now(this.brasil);
+                    this.dataPartida = LocalDate.now(this.brasil);
+                    this.dbconnection.inserirRegistroPartida(
+                            Date.valueOf(this.dataPartida),
+                            Time.valueOf(this.horarioPartida),
+                            this.nomeP1,
+                            this.nomeP2,
+                            this.playerWin,
+                            this.empate);
+                } catch (SQLException ex) {
+                    Logger.getLogger(Tabuleiro.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            //DELETAR ACIMA
         }
 
         if (cliente == null) {
@@ -428,8 +461,6 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         }
     }
 
-    
-    
     public int gameOver() { //Wrapper for gameOverInternal
         return gameOverInternal(0, 0, 0, 0);
     }
@@ -442,13 +473,14 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
             white += 1;
         }
         if (col == numTilesPerRow - 1 && row == numTilesPerRow - 1) {
-            if (red == 0)
+            if (red == 0) {
                 return WHITE;
-            else
-                if(white == 0)
+            } else if (white == 0) {
                 return RED;
-                else return EMPTY;
-            
+            } else {
+                return EMPTY;
+            }
+
         }
         if (col == numTilesPerRow - 1) {
             row += 1;
@@ -648,7 +680,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         isJump = false;
         puloObrigatorio = false;
         currentPlayer = RED;
-        
+
         //UPDATE THE STARTING POSITIONS
         for (int col = 0; col < (numTilesPerRow); col += 2) {
             gameData[col][5] = corPlayer1;
@@ -680,7 +712,6 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         //PRINT THE BOARD & PIECES
         super.paintComponent(g);
         int ganhou;
-        String playerWin;
         for (int row = 0; row < numTilesPerRow; row++) {
             for (int col = 0; col < numTilesPerRow; col++) {
                 if ((row % 2 == 0 && col % 2 == 0) || (row % 2 != 0 && col % 2 != 0)) { // This assigns the checkerboard pattern
@@ -729,35 +760,33 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
                 }
             }
         }
-        ganhou  = gameOver();
+        ganhou = gameOver();
         if (ganhou != EMPTY) {
-            
-            if (cliente == null) {  
+
+            if (cliente == null) {
                 /*Date data, Time horario, String jogador_1, String jogador_2, String vencedor, boolean empate*/
-                /*
-                inserirRegistroPartida(
-                Date.valueOf(this.dataPartida) ,
-                Time.valueOf(this.horarioPartida) ,
-                this.nomeP1 ,
-                this.nomeP2 ,
-                playerWin ,
-                this.emapate
-                )
-                */
+                if (ganhou == this.corPlayer1) {
+                    this.playerWin = this.nomeP1;
+                } else {
+                    this.playerWin = this.nomeP2;
+                }
+                try {
+                    this.dbconnection.inserirRegistroPartida(
+                            Date.valueOf(this.dataPartida),
+                            Time.valueOf(this.horarioPartida),
+                            this.nomeP1,
+                            this.nomeP2,
+                            this.playerWin,
+                            this.empate);
+                } catch (SQLException ex) {
+                    Logger.getLogger(Tabuleiro.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 
-                /*nome , */
-                /*
-                
-                */
-                if(ganhou == this.corPlayer1)
-                        playerWin = this.nomeP1;
-                        else
-                            playerWin = this.nomeP2;
-                        
-            servidor.mandarMsg("Sair:"+ganhou);
-        } else {
-            cliente.mandarMensagem("Sair:"+ganhou);
-        }
+
+                servidor.mandarMsg("Sair:" + ganhou);
+            } else {
+                cliente.mandarMensagem("Sair:" + ganhou);
+            }
             gameOverDisplay(g);
         }
     }
