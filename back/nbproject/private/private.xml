@@ -3,12 +3,8 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-<<<<<<< HEAD
-            <file>file:/C:/Repos/Jogo-de-Damas---Java/back/src/java/classes/Main.java</file>
-=======
-            <file>file:/C:/Users/anach/Documents/Unesp/4°%20Ano/Jogo-de-Damas---Java-develop/Jogo-de-Damas---Java-develop/back/src/java/classes/Database.java</file>
-            <file>file:/C:/Users/anach/Documents/Unesp/4°%20Ano/Jogo-de-Damas---Java-develop/Jogo-de-Damas---Java-develop/back/web/WEB-INF/jsp/index.jsp</file>
->>>>>>> 9c8a63ba7080c9695558b41370664e537602e3a9
+            <file>file:/C:/Repos/Jogo-de-Damas---Java/back/src/java/classes/Database.java</file>
+            <file>file:/C:/Repos/Jogo-de-Damas---Java/back/jogodamas.sql</file>
         </group>
     </open-files>
 </project-private>

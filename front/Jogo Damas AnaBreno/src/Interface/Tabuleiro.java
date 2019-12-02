@@ -71,6 +71,7 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
     private int corPlayer1, corPlayer2;
     public boolean gameInProgress = true;
     private int colAt, linAt;
+    private String strGanhou;
 
     /*Conexão com o outro jogador*/
     private Servidor servidor;
@@ -204,23 +205,6 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         checkKing(col, row);
         if (abs((storedRow - row)) > 1) {
             removePiece(col, row, storedCol, storedRow);
-            //DELETAR ABAIXO
-            this.playerWin = this.nomeP2;
-                
-                try {
-                    this.horarioPartida = LocalTime.now(this.brasil);
-                    this.dataPartida = LocalDate.now(this.brasil);
-                    this.dbconnection.inserirRegistroPartida(
-                            Date.valueOf(this.dataPartida),
-                            Time.valueOf(this.horarioPartida),
-                            this.nomeP1,
-                            this.nomeP2,
-                            this.playerWin,
-                            this.empate);
-                } catch (SQLException ex) {
-                    Logger.getLogger(Tabuleiro.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            //DELETAR ACIMA
         }
 
         if (cliente == null) {
@@ -762,27 +746,33 @@ public class Tabuleiro extends JPanel implements ActionListener, MouseListener, 
         }
         ganhou = gameOver();
         if (ganhou != EMPTY) {
-
-            if (cliente == null) {
-                /*Date data, Time horario, String jogador_1, String jogador_2, String vencedor, boolean empate*/
-                if (ganhou == this.corPlayer1) {
-                    this.playerWin = this.nomeP1;
-                } else {
-                    this.playerWin = this.nomeP2;
-                }
-                try {
-                    this.dbconnection.inserirRegistroPartida(
+            if (ganhou == this.corPlayer1) {
+                this.strGanhou = "vitoria";
+                this.playerWin = this.nomeP1;
+            } else {
+                this.strGanhou = "derrota";
+                this.playerWin = this.nomeP2;
+            }
+            
+            try {
+                this.horarioPartida = LocalTime.now(this.brasil);
+                this.dataPartida = LocalDate.now(this.brasil);
+                this.dbconnection.inserirRegistroPartida(
                             Date.valueOf(this.dataPartida),
                             Time.valueOf(this.horarioPartida),
                             this.nomeP1,
                             this.nomeP2,
                             this.playerWin,
                             this.empate);
-                } catch (SQLException ex) {
-                    Logger.getLogger(Tabuleiro.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                
-
+      
+                this.dbconnection.inserirPontuacaoJogador(
+                        this.nomeP1,
+                        (this.qtdDamasP1 - this.qtdDamasP2),
+                        this.strGanhou);
+            } catch (SQLException ex) {
+                Logger.getLogger(Tabuleiro.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            if (cliente == null) {
                 servidor.mandarMsg("Sair:" + ganhou);
             } else {
                 cliente.mandarMensagem("Sair:" + ganhou);

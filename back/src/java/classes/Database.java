@@ -51,10 +51,10 @@ public class Database {
                         numero_vitorias++;
                         break;
                     case "derrota":
+                        pontuacao-=10;
                         numero_derrotas++;
                         break;
                     case "empate":
-                        pontuacao+=5;
                         numero_empates++;
                         break;
                 }
@@ -66,7 +66,7 @@ public class Database {
                     pontuacao = res.getInt("pontuacao")+pontuacao;
                     numero_vitorias = res.getInt("numero_vitorias")+numero_vitorias;
                     numero_empates = res.getInt("numero_empates")+numero_empates;
-                    numero_derrotas = res.getInt("numero_derrotas");
+                    numero_derrotas = res.getInt("numero_derrotas")+numero_derrotas;
                     saldo_damas = res.getInt("saldo_damas")+saldo_damas;
                 }
   
@@ -97,7 +97,7 @@ public class Database {
             stmt.executeQuery("SET @row_number := 0;");
                 String sql = "SELECT " +
                             "(@row_number:=@row_number + 1) AS posicao, nome_jogador, pontuacao, "+
-                            "numero_vitorias, numero_empates, numero_derrotas, saldo_damas FROM classificacao ORDER BY pontuacao";
+                            "numero_vitorias, numero_empates, numero_derrotas, saldo_damas FROM classificacao ORDER BY pontuacao desc";
 		ResultSet res = stmt.executeQuery(sql);
                 return res;
         }
